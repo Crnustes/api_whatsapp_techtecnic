@@ -1,0 +1,10 @@
+node_modules/
+.env
+src/credentials/*.json
+*.log
+.DS_Store
+dist/
+build/
+.vscode/
+*.swp
+*.bak
