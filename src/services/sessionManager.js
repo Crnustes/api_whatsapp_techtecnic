@@ -8,6 +8,7 @@ class SessionManager {
   constructor() {
     this.sessions = new Map();
     this.SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutos de inactividad
+    this.INACTIVITY_WARNING_TIME = 5 * 60 * 1000; // 5 minutos para aviso de inactividad
     this.startCleanupInterval();
   }
 
@@ -20,6 +21,7 @@ class SessionManager {
         userId,
         createdAt: Date.now(),
         lastActivity: Date.now(),
+        inactivityWarningShown: false,
         currentFlow: null,
         flowData: {},
         conversationHistory: [],
@@ -29,6 +31,7 @@ class SessionManager {
 
     const session = this.sessions.get(userId);
     session.lastActivity = Date.now();
+    session.inactivityWarningShown = false; // Reset cuando hay actividad
     return session;
   }
 
@@ -155,6 +158,36 @@ class SessionManager {
   getMetadata(userId, key) {
     const session = this.getSession(userId);
     return key ? session.metadata[key] : session.metadata;
+  }
+
+  /**
+   * Verificar inactividad y retornar estado
+   * Retorna: null si activa, 'warning' si necesita aviso, 'expired' si expirada
+   */
+  checkInactivity(userId) {
+    const session = this.getSession(userId);
+    const now = Date.now();
+    const inactiveTime = now - session.lastActivity;
+
+    // Si ha pasado el timeout completo, la sesión expiró
+    if (inactiveTime > this.SESSION_TIMEOUT) {
+      return 'expired';
+    }
+
+    // Si ha pasado 5 minutos y no se mostró el aviso
+    if (inactiveTime > this.INACTIVITY_WARNING_TIME && !session.inactivityWarningShown) {
+      return 'warning';
+    }
+
+    return null; // Sesión activa
+  }
+
+  /**
+   * Marcar que se mostró aviso de inactividad
+   */
+  markInactivityWarningShown(userId) {
+    const session = this.getSession(userId);
+    session.inactivityWarningShown = true;
   }
 
   /**

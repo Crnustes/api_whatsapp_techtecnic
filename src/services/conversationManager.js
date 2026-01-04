@@ -90,8 +90,20 @@ class ConversationManager {
         return this.handleMenuOption(userId, text);
       }
 
-      // Mensaje de texto sin contexto → enviar menú
-      console.log(`   🎯 Mensaje sin contexto → mostrando menú`);
+      // Mensaje de texto sin contexto → solo mostrar menú si es realmente un nuevo usuario
+      // No reenviar múltiples veces a usuarios que ya han interactuado
+      console.log(`   🎯 Mensaje sin contexto`);
+      const session = sessionManager.getSession(userId);
+      
+      // Si el usuario tiene historial pero no flujo activo, probablemente canceló algo
+      if (session.conversationHistory.length > 0) {
+        console.log(`   → Usuario con historial pero sin flujo → ignorando mensaje`);
+        await whatsappService.markAsRead(messageId);
+        return;
+      }
+
+      // Nuevo usuario sin historial → mostrar menú
+      console.log(`   → Nuevo usuario → mostrando menú`);
       await whatsappService.markAsRead(messageId);
       return this.showMainMenu(userId);
     }
