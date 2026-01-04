@@ -1,47 +1,86 @@
 /**
- * Quotation Flow
- * Flujo para generar cotizaciones automáticas
- * Usa OpenAI + reglas de negocio para proporcionar 3 opciones de precio
+ * Quotation Flow - Mejorado con OpenAI
+ * Flujo inteligente de cotizaciones sin mostrar precios aún
+ * Usa OpenAI para analizar necesidades y recomendar el mejor plan
  */
 
 import sessionManager from '../sessionManager.js';
 import whatsappService from '../whatsappService.js';
 import openAiService from '../openAiService.js';
 import googleSheetsService from '../googleSheetsService.js';
-import quotationEngine from '../quotationEngine.js';
 
 const QUOTATION_STEPS = {
-  projectType: 'projectType',
-  complexity: 'complexity',
-  timeline: 'timeline',
-  analysis: 'analysis',
-  options: 'options',
-  selection: 'selection'
+  description: 'description',
+  confirmation: 'confirmation'
 };
 
-const PROJECT_TYPES = [
-  { type: 'reply', reply: { id: 'proj_web', title: 'Sitio Web' } },
-  { type: 'reply', reply: { id: 'proj_ecommerce', title: 'Ecommerce' } },
-  { type: 'reply', reply: { id: 'proj_mobile', title: 'App Movil' } },
+const CONFIRM_BUTTONS = [
+  { type: 'reply', reply: { id: 'cotiz_yes', title: 'Si, contactar' } },
+  { type: 'reply', reply: { id: 'cotiz_no', title: 'Cancelar' } },
 ];
 
-const COMPLEXITY_OPTIONS = [
-  { type: 'reply', reply: { id: 'complex_basic', title: 'Basico' } },
-  { type: 'reply', reply: { id: 'complex_medium', title: 'Intermedio' } },
-  { type: 'reply', reply: { id: 'complex_high', title: 'Complejo' } },
-];
-
-const TIMELINE_OPTIONS = [
-  { type: 'reply', reply: { id: 'timeline_asap', title: 'Urgente' } },
-  { type: 'reply', reply: { id: 'timeline_quick', title: 'Rapido' } },
-  { type: 'reply', reply: { id: 'timeline_normal', title: 'Normal' } },
-];
-
-const OPTION_BUTTONS = [
-  { type: 'reply', reply: { id: 'opt_1', title: 'Economica' } },
-  { type: 'reply', reply: { id: 'opt_2', title: 'Recomendada' } },
-  { type: 'reply', reply: { id: 'opt_3', title: 'Premium' } },
-];
+// Planes disponibles con descripciones (sin precios)
+const PLANS = {
+  emprendedor: {
+    name: 'Plan Emprendedor',
+    ideal: 'Lanzar tu presencia digital',
+    includes: [
+      'Landing page moderna (1-2 secciones)',
+      'Dominio, hosting y SSL (1 año incluido)',
+      'Diseño responsivo mobile-first',
+      'Formulario de contacto + WhatsApp',
+      'Optimización SEO básica',
+      'Google Analytics configurado',
+      '1 revisión incluida'
+    ],
+    price_cop: 400000
+  },
+  profesional: {
+    name: 'Plan Profesional',
+    ideal: 'Empresas que buscan destacar',
+    includes: [
+      'Sitio completo (3-5 secciones)',
+      'SEO avanzado + analítica (GTM, GA4)',
+      'Diseño personalizado premium',
+      'Correos corporativos incluidos',
+      'Integración con redes sociales',
+      'Blog o noticias opcional',
+      'Mantenimiento mensual opcional',
+      '3 revisiones incluidas'
+    ],
+    price_cop: 900000
+  },
+  avanzado: {
+    name: 'Plan Avanzado',
+    ideal: 'E-commerce y aplicaciones web',
+    includes: [
+      'E-commerce completo (WooCommerce/React)',
+      'Integraciones con IA y automatizaciones',
+      'Optimización SEO + Core Web Vitals',
+      'Panel de administración personalizado',
+      'Capacitación post-entrega',
+      'Soporte técnico 3 meses',
+      'Migraciones y backups automáticos',
+      'Revisiones ilimitadas en desarrollo'
+    ],
+    price_cop: 1800000
+  },
+  partner: {
+    name: 'Plan Partner',
+    ideal: 'Agencias y desarrollo white-label',
+    includes: [
+      'Desarrollo white-label (tu marca)',
+      'Proyectos escalables y complejos',
+      'Confidencialidad y NDA',
+      'Tarifas preferenciales por volumen',
+      'Soporte técnico dedicado',
+      'Arquitectura empresarial',
+      'Integraciones avanzadas',
+      'Consultoría técnica incluida'
+    ],
+    price_cop: 'personalizado'
+  }
+};
 
 class QuotationFlow {
   /**
@@ -49,14 +88,23 @@ class QuotationFlow {
    */
   async initiate(userId) {
     sessionManager.setFlow(userId, 'quotation', {
-      step: QUOTATION_STEPS.projectType,
-      data: {},
-      email: null // Se pide después
+      step: QUOTATION_STEPS.description,
+      data: {}
     });
 
-    const message = `💰 *Solicitar Cotización*\n\nTe ayudaremos a obtener una cotización personalizada basada en tus necesidades.\n\n¿Qué tipo de proyecto necesitas?`;
+    const message = `💰 *Solicitar Cotización*
+
+Para brindarte la mejor recomendación personalizada, cuéntanos:
+
+📝 ¿Qué proyecto tienes en mente? Describe:
+• ¿Qué tipo de sitio/app necesitas?
+• ¿Cuál es el objetivo principal?
+• ¿Qué funcionalidades te gustaría incluir?
+• ¿Tienes alguna referencia o ejemplo?
+
+Si no estás seguro, escribe: *"no estoy seguro"* y te ayudaremos.`;
+
     await whatsappService.sendMessage(userId, message);
-    await whatsappService.sendInteractiveButtons(userId, 'Selecciona el tipo:', PROJECT_TYPES);
   }
 
   /**
@@ -66,27 +114,29 @@ class QuotationFlow {
     const flowData = sessionManager.getFlowData(userId);
     const currentStep = flowData.step;
 
+    if (message.type === 'text') {
+      const userInput = message.text.body.trim();
+      return this.processTextInput(userId, currentStep, userInput);
+    }
+
     if (message.type === 'interactive') {
       const option = message.interactive?.button_reply?.id;
       return this.processButtonInput(userId, currentStep, option);
     }
+  }
 
-    if (message.type === 'text') {
-      const input = message.text.body.trim();
-
-      // Si está esperando descripción o email, procesar texto
-      if (currentStep === QUOTATION_STEPS.analysis) {
+  /**
+   * Procesar entrada de texto
+   */
+  async processTextInput(userId, currentStep, input) {
+    switch (currentStep) {
+      case QUOTATION_STEPS.description:
         return this.handleDescription(userId, input);
-      }
 
-      if (currentStep === QUOTATION_STEPS.selection) {
-        return this.handleEmail(userId, input);
-      }
+      default:
+        sessionManager.clearFlow(userId);
+        await whatsappService.sendMessage(userId, 'Cotización completada.');
     }
-
-    // Si llegó acá, reiniciar
-    sessionManager.clearFlow(userId);
-    await whatsappService.sendMessage(userId, 'Proceso completado.');
   }
 
   /**
@@ -94,295 +144,192 @@ class QuotationFlow {
    */
   async processButtonInput(userId, currentStep, option) {
     switch (currentStep) {
-      case QUOTATION_STEPS.projectType:
-        return this.handleProjectType(userId, option);
-
-      case QUOTATION_STEPS.complexity:
-        return this.handleComplexity(userId, option);
-
-      case QUOTATION_STEPS.timeline:
-        return this.handleTimeline(userId, option);
-
-      case QUOTATION_STEPS.selection:
-        return this.handleOptionSelection(userId, option);
+      case QUOTATION_STEPS.confirmation:
+        return this.handleConfirmation(userId, option);
 
       default:
-        return this.showProjectTypeMenu(userId);
+        await whatsappService.sendMessage(userId, 'Por favor escribe tu respuesta.');
     }
   }
 
   /**
-   * Manejar tipo de proyecto
-   */
-  async handleProjectType(userId, projectId) {
-    const projectMap = {
-      'proj_web': 'Sitio Web',
-      'proj_ecommerce': 'Ecommerce',
-      'proj_mobile': 'App Móvil',
-      'proj_automation': 'Automatización',
-      'proj_integration': 'Integración',
-      'proj_other': 'Otro'
-    };
-
-    const projectName = projectMap[projectId] || 'No especificado';
-
-    sessionManager.updateFlowData(userId, {
-      step: QUOTATION_STEPS.complexity,
-      projectType: projectName
-    });
-
-    const message = `✅ Seleccionaste: *${projectName}*\n\n¿Cuál es la complejidad del proyecto?`;
-    await whatsappService.sendMessage(userId, message);
-    await whatsappService.sendInteractiveButtons(userId, 'Nivel de complejidad:', COMPLEXITY_OPTIONS);
-  }
-
-  /**
-   * Manejar complejidad
-   */
-  async handleComplexity(userId, complexityId) {
-    const complexityMap = {
-      'complex_basic': 'Básico',
-      'complex_medium': 'Medio',
-      'complex_high': 'Alto'
-    };
-
-    const complexityName = complexityMap[complexityId] || 'Medio';
-
-    sessionManager.updateFlowData(userId, {
-      step: QUOTATION_STEPS.timeline,
-      complexity: complexityName
-    });
-
-    const message = `✅ Complejidad: *${complexityName}*\n\n¿Cuándo necesitas que esté listo?`;
-    await whatsappService.sendMessage(userId, message);
-    await whatsappService.sendInteractiveButtons(userId, 'Timeline:', TIMELINE_OPTIONS);
-  }
-
-  /**
-   * Manejar timeline
-   */
-  async handleTimeline(userId, timelineId) {
-    const timelineMap = {
-      'timeline_asap': 'ASAP',
-      'timeline_quick': 'Rápido',
-      'timeline_normal': 'Normal',
-      'timeline_flexible': 'Flexible'
-    };
-
-    const timelineName = timelineMap[timelineId] || 'Normal';
-
-    sessionManager.updateFlowData(userId, {
-      step: QUOTATION_STEPS.analysis,
-      timeline: timelineName
-    });
-
-    const message = `✅ Timeline: *${timelineName}*\n\nAhora, cuéntanos más detalles sobre tu proyecto (funcionalidades principales, integraciones, etc.):`;
-    await whatsappService.sendMessage(userId, message);
-  }
-
-  /**
-   * Manejar descripción y generar cotización
+   * Manejar descripción del proyecto
    */
   async handleDescription(userId, description) {
-    if (description.length < 20) {
-      await whatsappService.sendMessage(userId, '❌ Por favor, proporciona más detalles (mínimo 20 caracteres).');
+    if (description.length < 10) {
+      await whatsappService.sendMessage(userId, '❌ Por favor, proporciona más detalles sobre tu proyecto (mínimo 10 caracteres).');
       return;
     }
 
-    const flowData = sessionManager.getFlowData(userId);
+    // Mostrar mensaje de análisis
+    await whatsappService.sendMessage(userId, '🤖 Analizando tu proyecto con IA...\n\nUn momento por favor...');
 
-    // Mostrar que estamos procesando
-    await whatsappService.sendMessage(userId, '⏳ Analizando tu proyecto...');
+    // Analizar con OpenAI
+    const recommendation = await this.analyzeProjectWithAI(description);
 
-    try {
-      // Generar análisis con OpenAI
-      const analysis = await this.analyzeProject(flowData, description);
-
-      // Generar 3 opciones de cotización
-      const quotations = await quotationEngine.generateQuotations({
-        projectType: flowData.projectType,
-        complexity: flowData.complexity,
-        timeline: flowData.timeline,
-        analysis: analysis
-      });
-
-      sessionManager.updateFlowData(userId, {
-        step: QUOTATION_STEPS.options,
-        description: description,
-        analysis: analysis,
-        quotations: quotations
-      });
-
-      return this.showQuotationOptions(userId, quotations);
-
-    } catch (error) {
-      console.error('Error generando cotización:', error);
-      await whatsappService.sendMessage(userId, '❌ Hubo un error procesando tu solicitud. Por favor intenta nuevamente.');
-      sessionManager.clearFlow(userId);
-    }
-  }
-
-  /**
-   * Mostrar opciones de cotización
-   */
-  async showQuotationOptions(userId, quotations) {
-    const message = `
-🎯 *Opciones de Cotización:*
-
-━━━━━━━━━━━━━━━━━━━━━━
-
-💰 *OPCIÓN ECONÓMICA*
-Precio: $${quotations.basic.price.toLocaleString()}
-Características:
-${quotations.basic.features.map(f => `• ${f}`).join('\n')}
-Tiempo: ${quotations.basic.timeline} semanas
-
-━━━━━━━━━━━━━━━━━━━━━━
-
-⭐ *OPCIÓN RECOMENDADA*
-Precio: $${quotations.recommended.price.toLocaleString()}
-Características:
-${quotations.recommended.features.map(f => `• ${f}`).join('\n')}
-Tiempo: ${quotations.recommended.timeline} semanas
-
-━━━━━━━━━━━━━━━━━━━━━━
-
-👑 *OPCIÓN PREMIUM*
-Precio: $${quotations.premium.price.toLocaleString()}
-Características:
-${quotations.premium.features.map(f => `• ${f}`).join('\n')}
-Tiempo: ${quotations.premium.timeline} semanas
-
-━━━━━━━━━━━━━━━━━━━━━━
-
-¿Cuál te interesa?
-    `.trim();
-
-    await whatsappService.sendMessage(userId, message);
-    await whatsappService.sendInteractiveButtons(userId, 'Elige una opción:', OPTION_BUTTONS);
-
-    sessionManager.updateFlowData(userId, {
-      step: QUOTATION_STEPS.selection
-    });
-  }
-
-  /**
-   * Manejar selección de opción
-   */
-  async handleOptionSelection(userId, optionId) {
-    const optionMap = {
-      'opt_1': 'basic',
-      'opt_2': 'recommended',
-      'opt_3': 'premium'
-    };
-
-    const selectedOption = optionMap[optionId];
-    const flowData = sessionManager.getFlowData(userId);
-    const quotation = flowData.quotations[selectedOption];
-
-    sessionManager.updateFlowData(userId, {
-      selectedOption: selectedOption,
-      selectedPrice: quotation.price
-    });
-
-    const message = `✅ Excelente elección.\n\n📧 Para completar, ¿cuál es tu correo electrónico?`;
-    await whatsappService.sendMessage(userId, message);
-  }
-
-  /**
-   * Manejar email y guardar cotización
-   */
-  async handleEmail(userId, email) {
-    if (!this.validateEmail(email)) {
-      await whatsappService.sendMessage(userId, '❌ Por favor, ingresa un email válido.');
+    if (!recommendation) {
+      await whatsappService.sendMessage(userId, '❌ Hubo un error en el análisis. Por favor, intenta nuevamente.');
       return;
     }
 
-    const flowData = sessionManager.getFlowData(userId);
-    const quotation = flowData.quotations[flowData.selectedOption];
+    // Guardar datos
+    sessionManager.updateFlowData(userId, {
+      step: QUOTATION_STEPS.confirmation,
+      description: description,
+      recommendedPlan: recommendation.planKey,
+      analysis: recommendation.analysis,
+      features: recommendation.features
+    });
 
-    // Guardar en Google Sheets
-    const quotationData = [
-      new Date().toISOString(),
-      email,
-      'Cliente',
-      flowData.projectType,
-      flowData.complexity,
-      flowData.selectedOption,
-      quotation.price,
-      'enviada'
-    ];
-
-    try {
-      await googleSheetsService(quotationData, 'cotizaciones');
-
-      const confirmMessage = `
-🎉 *¡Cotización Enviada!*
-
-Gracias por confiar en Tech Tecnic.
-
-📧 Hemos enviado los detalles a: ${email}
-
-💡 Próximos pasos:
-1. Revisa tu email con toda la información
-2. Si tienes dudas, respondemos al instante
-3. ¿Listo para comenzar? Agenda una llamada con nuestro equipo
-
-¿Deseas agendar una reunión ahora?
-      `.trim();
-
-      sessionManager.clearFlow(userId);
-      await whatsappService.sendMessage(userId, confirmMessage);
-
-    } catch (error) {
-      console.error('Error guardando cotización:', error);
-      await whatsappService.sendMessage(userId, '❌ Hubo un error. Por favor intenta nuevamente.');
-    }
+    // Mostrar recomendación
+    await this.showRecommendation(userId, recommendation);
   }
 
   /**
    * Analizar proyecto con OpenAI
    */
-  async analyzeProject(flowData, description) {
-    const prompt = `
-Tu rol es analizar brevemente un proyecto de desarrollo y proporcionar insights.
+  async analyzeProjectWithAI(projectDescription) {
+    const systemPrompt = `Eres un asesor técnico experto en desarrollo web y móvil de Tech Tecnic.
 
-Datos del proyecto:
-- Tipo: ${flowData.projectType}
-- Complejidad: ${flowData.complexity}
-- Timeline: ${flowData.timeline}
-- Descripción: ${description}
+Basándote en la descripción del proyecto del cliente, debes:
+1. Analizar qué tipo de solución necesita
+2. Recomendar el plan más adecuado de estos 4:
+   - emprendedor: Landing page, sitio básico (1-2 secciones)
+   - profesional: Sitio completo (3-5 secciones), SEO, blog
+   - avanzado: E-commerce, integraciones IA, apps complejas
+   - partner: Agencias, white-label, proyectos enterprise
 
-Proporciona un análisis de 2-3 líneas sobre:
-1. Viabilidad del proyecto
-2. Desafíos principales
-3. Recomendación técnica
+3. Explicar POR QUÉ ese plan es el mejor para su proyecto
+4. Listar 3-5 características clave que se incluirían
 
-Sé conciso y práctico.
-    `.trim();
+Responde SOLO en formato JSON:
+{
+  "planKey": "emprendedor|profesional|avanzado|partner",
+  "analysis": "Explicación de por qué este plan es ideal (2-3 frases)",
+  "features": ["característica 1", "característica 2", "característica 3"]
+}
+
+NO menciones precios. Solo enfócate en la solución técnica ideal.`;
+
+    const userPrompt = `Proyecto del cliente:\n\n${projectDescription}`;
 
     try {
-      return await openAiService(prompt);
+      const response = await openAiService.getChatCompletion(
+        [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        { model: 'gpt-4o', temperature: 0.7, max_tokens: 500 }
+      );
+
+      const content = response.choices[0]?.message?.content;
+      if (!content) return null;
+
+      // Extraer JSON de la respuesta
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) return null;
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      
+      // Validar que el plan existe
+      if (!PLANS[parsed.planKey]) {
+        parsed.planKey = 'profesional'; // Default
+      }
+
+      return parsed;
     } catch (error) {
-      console.error('Error analizando proyecto:', error);
-      return 'Análisis no disponible temporalmente.';
+      console.error('Error analyzing with OpenAI:', error);
+      return null;
     }
   }
 
   /**
-   * Validar email
+   * Mostrar recomendación personalizada
    */
-  validateEmail(email) {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
+  async showRecommendation(userId, recommendation) {
+    const plan = PLANS[recommendation.planKey];
+    const features = recommendation.features.map(f => `✓ ${f}`).join('\n');
+
+    const message = `✨ *Recomendación Personalizada*
+
+🎯 *${plan.name}*
+Ideal para: ${plan.ideal}
+
+📋 *Por qué este plan:*
+${recommendation.analysis}
+
+🔧 *Características clave para tu proyecto:*
+${features}
+
+💡 *Lo que incluye este plan:*
+${plan.includes.slice(0, 5).map(i => `• ${i}`).join('\n')}
+
+¿Te gustaría que un especialista te contacte para discutir los detalles y presupuesto?`;
+
+    await whatsappService.sendMessage(userId, message);
+    await whatsappService.sendInteractiveButtons(
+      userId,
+      'Confirma tu interes:',
+      CONFIRM_BUTTONS
+    );
   }
 
   /**
-   * Mostrar menú de tipos de proyecto
+   * Manejar confirmación
    */
-  async showProjectTypeMenu(userId) {
-    const message = '¿Qué tipo de proyecto necesitas?';
-    await whatsappService.sendInteractiveButtons(userId, message, PROJECT_TYPES);
+  async handleConfirmation(userId, option) {
+    const flowData = sessionManager.getFlowData(userId);
+
+    if (option === 'cotiz_no') {
+      sessionManager.clearFlow(userId);
+      await whatsappService.sendMessage(userId, '👌 Entendido. Si cambias de opinión, estaremos aquí para ayudarte.');
+      return;
+    }
+
+    if (option === 'cotiz_yes') {
+      const clientName = sessionManager.getMetadata(userId, 'clientName');
+      const userPhone = sessionManager.getMetadata(userId, 'phone');
+      const plan = PLANS[flowData.recommendedPlan];
+
+      // Guardar en Google Sheets
+      // [Timestamp, Email, Cliente, Tipo_Proyecto, Complejidad, Opción, Monto, Estado]
+      const quotationData = [
+        new Date().toISOString(),
+        '', // Email (lo pediremos después si es necesario)
+        clientName || 'Cliente WhatsApp',
+        flowData.description.substring(0, 100), // Descripción corta
+        flowData.recommendedPlan,
+        plan.name,
+        plan.price_cop,
+        'pendiente'
+      ];
+
+      try {
+        await googleSheetsService(quotationData, 'cotizaciones');
+
+        const confirmMessage = `
+🎉 *¡Solicitud Recibida!*
+
+Gracias ${clientName || ''}, hemos registrado tu interés en nuestro *${plan.name}*.
+
+📞 Teléfono: ${userPhone}
+
+👨‍💻 Un especialista de Tech Tecnic te contactará en las próximas 24 horas para:
+• Discutir los detalles de tu proyecto
+• Ajustar la propuesta a tus necesidades exactas
+• Presentarte un presupuesto personalizado
+
+¿Hay algo más en lo que podamos ayudarte?
+        `.trim();
+
+        sessionManager.clearFlow(userId);
+        await whatsappService.sendMessage(userId, confirmMessage);
+
+      } catch (error) {
+        console.error('Error guardando cotización:', error);
+        await whatsappService.sendMessage(userId, '❌ Hubo un error. Por favor, intenta nuevamente.');
+      }
+    }
   }
 }
 

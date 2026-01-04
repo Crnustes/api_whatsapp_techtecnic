@@ -25,10 +25,14 @@ class ConversationManager {
    */
   async handleIncomingMessage(message, senderInfo) {
     const userId = message.from;
+    const userPhone = senderInfo?.wa_id || userId; // Capturar teléfono de WhatsApp
     const session = sessionManager.getSession(userId);
 
-    console.log(`\n👤 Usuario: ${userId}`);
+    console.log(`\n👤 Usuario: ${userId} (Tel: ${userPhone})`);
     console.log(`   Flujo actual: ${session.currentFlow || 'ninguno'}`);
+
+    // Guardar teléfono en metadata
+    sessionManager.setMetadata(userId, 'phone', userPhone);
 
     // Guardar en historial
     if (message.type === 'text') {
@@ -165,7 +169,8 @@ class ConversationManager {
     switch (mappedOption) {
       case 'option_agenda':
         console.log(`   Usuario seleccionó: Agendar Reunion`);
-        return appointmentFlow.initiate(userId);
+        const userPhone = sessionManager.getMetadata(userId, 'phone');
+        return appointmentFlow.initiate(userId, userPhone);
 
       case 'option_quotation':
         console.log(`   Usuario seleccionó: Solicitar Cotizacion`);

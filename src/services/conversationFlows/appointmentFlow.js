@@ -18,10 +18,15 @@ const APPOINTMENT_STEPS = {
   confirmation: 'confirmation'
 };
 
-const SERVICE_OPTIONS = [
-  { type: 'reply', reply: { id: 'service_web', title: 'Desarrollo Web' } },
-  { type: 'reply', reply: { id: 'service_mobile', title: 'App Movil' } },
-  { type: 'reply', reply: { id: 'service_ecommerce', title: 'Ecommerce' } },
+// Servicio se solicita como texto libre con ejemplos
+const SERVICE_EXAMPLES = [
+  'Sitio web corporativo',
+  'Tienda online',
+  'App móvil iOS/Android',
+  'Sistema de gestión',
+  'Landing page',
+  'Rediseño de sitio',
+  'Consultoría técnica'
 ];
 
 const CONFIRM_BUTTONS = [
@@ -33,10 +38,12 @@ class AppointmentFlow {
   /**
    * Iniciar flujo de agendamiento
    */
-  async initiate(userId) {
+  async initiate(userId, userPhone = '') {
     sessionManager.setFlow(userId, 'appointment', {
       step: APPOINTMENT_STEPS.name,
-      data: {}
+      data: {
+        phone: userPhone || userId // Usar teléfono de WhatsApp automáticamente
+      }
     });
 
     const message = '📅 *Agendar Reunión*\n\nTe ayudaremos a agendar una llamada con nuestro equipo. ¿Cuál es tu nombre?';
@@ -73,7 +80,7 @@ class AppointmentFlow {
         return this.handleEmail(userId, input);
 
       case APPOINTMENT_STEPS.service:
-        return this.showServiceMenu(userId);
+        return this.handleServiceText(userId, input);
 
       case APPOINTMENT_STEPS.description:
         return this.handleDescription(userId, input);
@@ -92,14 +99,11 @@ class AppointmentFlow {
    */
   async processButtonInput(userId, currentStep, option) {
     switch (currentStep) {
-      case APPOINTMENT_STEPS.service:
-        return this.handleServiceSelection(userId, option);
-
       case APPOINTMENT_STEPS.confirmation:
         return this.handleConfirmation(userId, option);
 
       default:
-        return this.showServiceMenu(userId);
+        await whatsappService.sendMessage(userId, 'Por favor escribe tu respuesta.');
     }
   }
 
@@ -135,36 +139,33 @@ class AppointmentFlow {
       email: email
     });
 
-    const message = '📧 Email guardado.\n\n¿Qué servicio te interesa?';
-    this.showServiceMenu(userId);
+    await this.askForService(userId);
   }
 
   /**
-   * Mostrar menú de servicios
+   * Solicitar servicio como texto libre
    */
-  async showServiceMenu(userId) {
-    const message = '¿Qué servicio necesitas?';
-    await whatsappService.sendInteractiveButtons(userId, message, SERVICE_OPTIONS);
+  async askForService(userId) {
+    const examples = SERVICE_EXAMPLES.slice(0, 4).join('\n• ');
+    const message = `🎯 *¿Qué servicio necesitas?*\n\nEscribe qué necesitas, por ejemplo:\n• ${examples}\n\nSi no estás seguro, escribe: *"no estoy seguro"*`;
+    await whatsappService.sendMessage(userId, message);
   }
 
   /**
-   * Manejar selección de servicio
+   * Manejar servicio como texto libre
    */
-  async handleServiceSelection(userId, serviceId) {
-    const serviceMap = {
-      'service_web': 'Desarrollo Web',
-      'service_mobile': 'App Móvil',
-      'service_ecommerce': 'Ecommerce'
-    };
-
-    const serviceName = serviceMap[serviceId] || 'No especificado';
+  async handleServiceText(userId, serviceText) {
+    if (serviceText.length < 3) {
+      await whatsappService.sendMessage(userId, '❌ Por favor, describe brevemente el servicio que necesitas (mínimo 3 caracteres).');
+      return;
+    }
 
     sessionManager.updateFlowData(userId, {
       step: APPOINTMENT_STEPS.description,
-      service: serviceName
+      service: serviceText
     });
 
-    const message = `Seleccionaste: ${serviceName}\n\nCuéntanos brevemente sobre tu proyecto:`;
+    const message = `Perfecto, servicio: *${serviceText}* ✅\n\nAhora cuéntanos con más detalle qué necesitas o qué problema buscas resolver:`;
     await whatsappService.sendMessage(userId, message);
   }
 
@@ -244,14 +245,16 @@ class AppointmentFlow {
     }
 
     if (option === 'confirm_yes') {
-      // Guardar en Google Sheets
+      // Guardar en Google Sheets con estructura correcta
+      // [Timestamp, Nombre, Email, Teléfono, Empresa, Servicio, Descripción, Estado]
       const appointmentData = [
         new Date().toISOString(),
         flowData.name,
         flowData.email,
+        flowData.phone || userId, // Teléfono de WhatsApp
+        '', // Empresa (vacío por ahora)
         flowData.service,
         flowData.description,
-        flowData.datetime,
         'pendiente'
       ];
 
