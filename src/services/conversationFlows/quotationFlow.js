@@ -20,31 +20,27 @@ const QUOTATION_STEPS = {
 };
 
 const PROJECT_TYPES = [
-  { type: 'reply', reply: { id: 'proj_web', title: '🌐 Sitio Web' } },
-  { type: 'reply', reply: { id: 'proj_ecommerce', title: '🛒 Ecommerce' } },
-  { type: 'reply', reply: { id: 'proj_mobile', title: '📱 App Móvil' } },
-  { type: 'reply', reply: { id: 'proj_automation', title: '⚙️ Automatización' } },
-  { type: 'reply', reply: { id: 'proj_integration', title: '🔗 Integración' } },
-  { type: 'reply', reply: { id: 'proj_other', title: '✨ Otro' } },
+  { type: 'reply', reply: { id: 'proj_web', title: 'Sitio Web' } },
+  { type: 'reply', reply: { id: 'proj_ecommerce', title: 'Ecommerce' } },
+  { type: 'reply', reply: { id: 'proj_mobile', title: 'App Movil' } },
 ];
 
 const COMPLEXITY_OPTIONS = [
-  { type: 'reply', reply: { id: 'complex_basic', title: '1️⃣ Básico (Simple)' } },
-  { type: 'reply', reply: { id: 'complex_medium', title: '2️⃣ Medio (Moderado)' } },
-  { type: 'reply', reply: { id: 'complex_high', title: '3️⃣ Alto (Complejo)' } },
+  { type: 'reply', reply: { id: 'complex_basic', title: 'Basico' } },
+  { type: 'reply', reply: { id: 'complex_medium', title: 'Intermedio' } },
+  { type: 'reply', reply: { id: 'complex_high', title: 'Complejo' } },
 ];
 
 const TIMELINE_OPTIONS = [
-  { type: 'reply', reply: { id: 'timeline_asap', title: '⚡ ASAP (< 2 semanas)' } },
-  { type: 'reply', reply: { id: 'timeline_quick', title: '🚀 Rápido (2-4 semanas)' } },
-  { type: 'reply', reply: { id: 'timeline_normal', title: '📅 Normal (1-2 meses)' } },
-  { type: 'reply', reply: { id: 'timeline_flexible', title: '😌 Flexible (> 2 meses)' } },
+  { type: 'reply', reply: { id: 'timeline_asap', title: 'Urgente' } },
+  { type: 'reply', reply: { id: 'timeline_quick', title: 'Rapido' } },
+  { type: 'reply', reply: { id: 'timeline_normal', title: 'Normal' } },
 ];
 
 const OPTION_BUTTONS = [
-  { type: 'reply', reply: { id: 'opt_1', title: '💰 Opción Económica' } },
-  { type: 'reply', reply: { id: 'opt_2', title: '⭐ Opción Recomendada' } },
-  { type: 'reply', reply: { id: 'opt_3', title: '👑 Opción Premium' } },
+  { type: 'reply', reply: { id: 'opt_1', title: 'Economica' } },
+  { type: 'reply', reply: { id: 'opt_2', title: 'Recomendada' } },
+  { type: 'reply', reply: { id: 'opt_3', title: 'Premium' } },
 ];
 
 class QuotationFlow {

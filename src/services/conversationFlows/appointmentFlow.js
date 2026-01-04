@@ -19,11 +19,9 @@ const APPOINTMENT_STEPS = {
 };
 
 const SERVICE_OPTIONS = [
-  { type: 'reply', reply: { id: 'service_web', title: '🌐 Desarrollo Web' } },
-  { type: 'reply', reply: { id: 'service_mobile', title: '📱 App Móvil' } },
-  { type: 'reply', reply: { id: 'service_ecommerce', title: '🛒 Ecommerce' } },
-  { type: 'reply', reply: { id: 'service_automation', title: '⚙️ Automatización' } },
-  { type: 'reply', reply: { id: 'service_other', title: '✨ Otro' } },
+  { type: 'reply', reply: { id: 'service_web', title: 'Desarrollo Web' } },
+  { type: 'reply', reply: { id: 'service_mobile', title: 'App Movil' } },
+  { type: 'reply', reply: { id: 'service_ecommerce', title: 'Ecommerce' } },
 ];
 
 const CONFIRM_BUTTONS = [
@@ -145,7 +143,7 @@ class AppointmentFlow {
    * Mostrar menú de servicios
    */
   async showServiceMenu(userId) {
-    const message = '🎯 *¿Qué servicio necesitas?*';
+    const message = '¿Qué servicio necesitas?';
     await whatsappService.sendInteractiveButtons(userId, message, SERVICE_OPTIONS);
   }
 
@@ -156,9 +154,7 @@ class AppointmentFlow {
     const serviceMap = {
       'service_web': 'Desarrollo Web',
       'service_mobile': 'App Móvil',
-      'service_ecommerce': 'Ecommerce',
-      'service_automation': 'Automatización',
-      'service_other': 'Otro'
+      'service_ecommerce': 'Ecommerce'
     };
 
     const serviceName = serviceMap[serviceId] || 'No especificado';
@@ -168,7 +164,7 @@ class AppointmentFlow {
       service: serviceName
     });
 
-    const message = `✅ Seleccionaste: *${serviceName}*\n\nAhora, cuéntanos brevemente sobre tu proyecto o necesidad:`;
+    const message = `Seleccionaste: ${serviceName}\n\nCuéntanos brevemente sobre tu proyecto:`;
     await whatsappService.sendMessage(userId, message);
   }
 

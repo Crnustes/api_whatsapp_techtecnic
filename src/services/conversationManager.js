@@ -12,10 +12,9 @@ import sessionManager from './sessionManager.js';
 import whatsappService from './whatsappService.js';
 
 const MENU_BUTTONS = [
-  { type: 'reply', reply: { id: 'option_agenda', title: '📅 Agendar Reunión' } },
-  { type: 'reply', reply: { id: 'option_quotation', title: '💰 Solicitar Cotización' } },
-  { type: 'reply', reply: { id: 'option_question', title: '❓ Hacer Consulta' } },
-  { type: 'reply', reply: { id: 'option_portfolio', title: '🎨 Ver Portfolio' } },
+  { type: 'reply', reply: { id: 'option_agenda', title: 'Agendar Reunion' } },
+  { type: 'reply', reply: { id: 'option_quotation', title: 'Cotizacion' } },
+  { type: 'reply', reply: { id: 'option_question', title: 'Consulta' } },
 ];
 
 const GREETINGS = ['hola', 'hello', 'hi', 'buenos', 'buenas', 'hey', 'ey', 'que onda'];
@@ -158,7 +157,6 @@ class ConversationManager {
       '1': 'option_agenda',
       '2': 'option_quotation',
       '3': 'option_question',
-      '4': 'option_portfolio',
     };
 
     // Si es un número, convertir a opción
@@ -166,20 +164,16 @@ class ConversationManager {
 
     switch (mappedOption) {
       case 'option_agenda':
-        console.log(`   📅 Usuario seleccionó: Agendar Reunión`);
+        console.log(`   Usuario seleccionó: Agendar Reunion`);
         return appointmentFlow.initiate(userId);
 
       case 'option_quotation':
-        console.log(`   💰 Usuario seleccionó: Solicitar Cotización`);
+        console.log(`   Usuario seleccionó: Solicitar Cotizacion`);
         return quotationFlow.initiate(userId);
 
       case 'option_question':
-        console.log(`   ❓ Usuario seleccionó: Hacer Consulta`);
+        console.log(`   Usuario seleccionó: Hacer Consulta`);
         return assistantFlow.initiate(userId);
-
-      case 'option_portfolio':
-        console.log(`   🎨 Usuario seleccionó: Ver Portfolio`);
-        return this.sendPortfolioLink(userId);
 
       default:
         console.log(`   ⚠️ Opción no reconocida: "${option}"`);

@@ -14,9 +14,9 @@ const ASSISTANT_STEPS = {
 };
 
 const FEEDBACK_BUTTONS = [
-  { type: 'reply', reply: { id: 'feedback_yes', title: '👍 Sí, fue útil' } },
-  { type: 'reply', reply: { id: 'feedback_another', title: '❓ Otra pregunta' } },
-  { type: 'reply', reply: { id: 'feedback_agent', title: '👤 Hablar con agente' } },
+  { type: 'reply', reply: { id: 'feedback_yes', title: 'Fue util' } },
+  { type: 'reply', reply: { id: 'feedback_another', title: 'Otra pregunta' } },
+  { type: 'reply', reply: { id: 'feedback_agent', title: 'Hablar agente' } },
 ];
 
 class AssistantFlow {
