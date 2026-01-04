@@ -37,10 +37,35 @@ const SHEET_CONFIG = {
 
 /**
  * Obtener cliente autenticado
+ * Soporta tanto credenciales.json como variables de entorno
  */
 async function getAuthClient() {
+  let credentials;
+
+  // Prioridad 1: Variable de entorno GOOGLE_CREDENTIALS
+  if (process.env.GOOGLE_CREDENTIALS) {
+    try {
+      credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+    } catch (error) {
+      console.error("❌ Error parsing GOOGLE_CREDENTIALS:", error.message);
+      throw new Error("Invalid GOOGLE_CREDENTIALS JSON format");
+    }
+  }
+  // Prioridad 2: Archivo credentials.json (local development)
+  else {
+    try {
+      const credPath = path.join(process.cwd(), "src/credentials", "credentials.json");
+      const fs = await import("fs").then(m => m.default);
+      const credFile = fs.readFileSync(credPath, "utf8");
+      credentials = JSON.parse(credFile);
+    } catch (error) {
+      console.error("❌ Error loading credentials.json:", error.message);
+      throw new Error("Credentials not found. Set GOOGLE_CREDENTIALS env var or place credentials.json in src/credentials/");
+    }
+  }
+
   const auth = new google.auth.GoogleAuth({
-    keyFile: path.join(process.cwd(), "src/credentials", "credentials.json"),
+    credentials,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
 
