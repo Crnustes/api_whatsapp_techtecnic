@@ -79,8 +79,6 @@ class ConversationManager {
       if (text.includes('asesor') || text.includes('humano') || text.includes('agente') || text.includes('persona')) {
         console.log(`   🎯 Solicitud de asesor → escalando a humanHandoffFlow`);
         sessionManager.clearFlow(userId);
-        return humanHandoffFlow.initiate(userId);
-      }
         await whatsappService.markAsRead(messageId);
         return humanHandoffFlow.initiate(userId);
       }
