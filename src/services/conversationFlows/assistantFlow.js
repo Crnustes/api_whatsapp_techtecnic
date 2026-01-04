@@ -20,6 +20,12 @@ const FEEDBACK_BUTTONS = [
   { type: 'reply', reply: { id: 'feedback_agent', title: 'Hablar agente' } },
 ];
 
+const NEXT_STEP_BUTTONS = [
+  { type: 'reply', reply: { id: 'next_appointment', title: 'Agendar llamada' } },
+  { type: 'reply', reply: { id: 'next_portfolio', title: 'Ver portafolio' } },
+  { type: 'reply', reply: { id: 'next_end', title: 'Terminar' } },
+];
+
 class AssistantFlow {
   /**
    * Iniciar flujo de asistente
@@ -46,6 +52,10 @@ class AssistantFlow {
 
     if (message.type === 'text') {
       const userInput = message.text.body.trim();
+      // Si estamos en nextAction y recibe texto, ignorar
+      if (currentStep === 'nextAction') {
+        return;
+      }
       return this.processQuestion(userId, userInput);
     }
 
@@ -185,6 +195,18 @@ Si necesita hablar con un especialista, ofrécelo siempre como opción.`
         await this.handleEscalation(userId);
         break;
 
+      case 'next_appointment':
+        await this.handleNextAppointment(userId);
+        break;
+
+      case 'next_portfolio':
+        await this.handleNextPortfolio(userId);
+        break;
+
+      case 'next_end':
+        await this.handleNextEnd(userId);
+        break;
+
       default:
         sessionManager.clearFlow(userId);
         await whatsappService.sendMessage(userId, 'Proceso finalizado.');
@@ -195,13 +217,41 @@ Si necesita hablar con un especialista, ofrécelo siempre como opción.`
    * Manejar feedback positivo
    */
   async handlePositiveFeedback(userId) {
-    const message = `¡Excelente! 👌\n\n¿Te gustaría:\n1️⃣ Agendar una llamada con nuestro equipo\n2️⃣ Ver nuestro portafolio\n3️⃣ Terminar`;
+    const message = `¡Excelente! 👌\n\n¿Te gustaría hacer algo más?`;
 
-    sessionManager.clearFlow(userId);
+    sessionManager.updateFlowData(userId, {
+      step: 'nextAction'
+    });
+
     await whatsappService.sendMessage(userId, message);
+    await whatsappService.sendInteractiveButtons(userId, 'Elige una opción:', NEXT_STEP_BUTTONS);
+  }
 
-    // Aquí podrías mostrar opciones adicionales
-    // pero por simplicidad terminamos el flujo
+  /**
+   * Manejar siguiente acción: agendar llamada
+   */
+  async handleNextAppointment(userId) {
+    const appointmentFlow = (await import('./appointmentFlow.js')).default;
+    sessionManager.clearFlow(userId);
+    await appointmentFlow.initiate(userId);
+  }
+
+  /**
+   * Manejar siguiente acción: ver portafolio
+   */
+  async handleNextPortfolio(userId) {
+    const conversationManager = (await import('../conversationManager.js')).default;
+    sessionManager.clearFlow(userId);
+    await conversationManager.sendPortfolioLink(userId);
+  }
+
+  /**
+   * Manejar siguiente acción: terminar
+   */
+  async handleNextEnd(userId) {
+    const conversationManager = (await import('../conversationManager.js')).default;
+    sessionManager.clearFlow(userId);
+    await conversationManager.closeSession(userId);
   }
 
   /**
