@@ -97,8 +97,10 @@ class ConversationManager {
       
       // Si el usuario tiene historial pero no flujo activo, probablemente canceló algo
       if (session.conversationHistory.length > 0) {
-        console.log(`   → Usuario con historial pero sin flujo → ignorando mensaje`);
+        console.log(`   → Usuario con historial pero sin flujo → ofreciendo reiniciar`);
         await whatsappService.markAsRead(messageId);
+        const restartMessage = `Parece que tu sesión anterior se cerró.\n\nEscribe *hola* para comenzar de nuevo. 👋`;
+        await whatsappService.sendMessage(userId, restartMessage);
         return;
       }
 

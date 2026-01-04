@@ -7,8 +7,10 @@
  * Validar email
  */
 export function validateEmail(email) {
+  // Remover todos los espacios en blanco
+  const cleanEmail = email.replace(/\s/g, '');
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
+  return regex.test(cleanEmail);
 }
 
 /**

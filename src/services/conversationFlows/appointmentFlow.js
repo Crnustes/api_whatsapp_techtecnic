@@ -129,14 +129,17 @@ class AppointmentFlow {
    * Manejar email
    */
   async handleEmail(userId, email) {
-    if (!validateEmail(email)) {
+    // Limpiar espacios en blanco
+    const cleanEmail = email.replace(/\s/g, '').trim();
+    
+    if (!validateEmail(cleanEmail)) {
       await whatsappService.sendMessage(userId, '❌ Por favor, ingresa un email válido (ej: correo@ejemplo.com)');
       return;
     }
 
     sessionManager.updateFlowData(userId, {
       step: APPOINTMENT_STEPS.service,
-      email: email
+      email: cleanEmail
     });
 
     await this.askForService(userId);
