@@ -79,6 +79,13 @@ class ConversationManager {
         return humanHandoffFlow.initiate(userId);
       }
 
+      // Verificar si es una selección de número (1, 2, 3, 4)
+      if (['1', '2', '3', '4'].includes(text)) {
+        console.log(`   🎯 Selección de menú por número: ${text}`);
+        await whatsappService.markAsRead(messageId);
+        return this.handleMenuOption(userId, text);
+      }
+
       // Mensaje de texto sin contexto → enviar menú
       console.log(`   🎯 Mensaje sin contexto → mostrando menú`);
       await whatsappService.markAsRead(messageId);
@@ -146,20 +153,37 @@ class ConversationManager {
   async handleMenuOption(userId, option) {
     const session = sessionManager.getSession(userId);
 
-    switch (option) {
+    // Mapeo de números a opciones (en caso que el usuario escriba números)
+    const numberToOption = {
+      '1': 'option_agenda',
+      '2': 'option_quotation',
+      '3': 'option_question',
+      '4': 'option_portfolio',
+    };
+
+    // Si es un número, convertir a opción
+    const mappedOption = numberToOption[option] || option;
+
+    switch (mappedOption) {
       case 'option_agenda':
+        console.log(`   📅 Usuario seleccionó: Agendar Reunión`);
         return appointmentFlow.initiate(userId);
 
       case 'option_quotation':
+        console.log(`   💰 Usuario seleccionó: Solicitar Cotización`);
         return quotationFlow.initiate(userId);
 
       case 'option_question':
+        console.log(`   ❓ Usuario seleccionó: Hacer Consulta`);
         return assistantFlow.initiate(userId);
 
       case 'option_portfolio':
+        console.log(`   🎨 Usuario seleccionó: Ver Portfolio`);
         return this.sendPortfolioLink(userId);
 
       default:
+        console.log(`   ⚠️ Opción no reconocida: "${option}"`);
+        await whatsappService.sendMessage(userId, 'Por favor, selecciona una opción válida (1, 2, 3 o 4)');
         return this.showMainMenu(userId);
     }
   }
@@ -203,7 +227,8 @@ class ConversationManager {
     } catch (error) {
       console.error(`   ❌ Error mostrando menú:`, error.message);
       console.log(`   → Enviando menú fallback (texto)`);
-      await whatsappService.sendMessage(userId, 'Opciones: 1. Agendar reunión, 2. Cotización, 3. Consulta, 4. Portfolio');
+      const fallbackMenu = `📌 *Selecciona una opción:*\n\n1️⃣ *Agendar Reunión* - Agenda una cita con nosotros\n\n2️⃣ *Solicitar Cotización* - Obtén una cotización personalizada\n\n3️⃣ *Hacer Consulta* - Haz una pregunta al asistente\n\n4️⃣ *Ver Portfolio* - Conoce nuestros proyectos\n\n(Responde con el número de la opción)`;
+      await whatsappService.sendMessage(userId, fallbackMenu);
     }
   }
 
