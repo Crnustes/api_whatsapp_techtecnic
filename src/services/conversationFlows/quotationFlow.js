@@ -214,19 +214,15 @@ NO menciones precios. Solo enfócate en la solución técnica ideal.`;
     const userPrompt = `Proyecto del cliente:\n\n${projectDescription}`;
 
     try {
-      const response = await openAiService.getChatCompletion(
-        [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        { model: 'gpt-4o', temperature: 0.7, max_tokens: 500 }
-      );
+      const response = await openAiService([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ]);
 
-      const content = response.choices[0]?.message?.content;
-      if (!content) return null;
+      if (!response) return null;
 
       // Extraer JSON de la respuesta
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
       if (!jsonMatch) return null;
 
       const parsed = JSON.parse(jsonMatch[0]);
