@@ -75,9 +75,12 @@ class ConversationManager {
         return this.sendWelcome(userId, messageId, clientName);
       }
 
-      if (text.includes('humano') || text.includes('agente') || text.includes('persona')) {
-        // Usuario quiere hablar con un agente
-        console.log(`   🎯 Solicitud de agente → escalando`);
+      // Detectar solicitud de asesor/agente
+      if (text.includes('asesor') || text.includes('humano') || text.includes('agente') || text.includes('persona')) {
+        console.log(`   🎯 Solicitud de asesor → escalando a humanHandoffFlow`);
+        sessionManager.clearFlow(userId);
+        return humanHandoffFlow.initiate(userId);
+      }
         await whatsappService.markAsRead(messageId);
         return humanHandoffFlow.initiate(userId);
       }
@@ -238,6 +241,15 @@ class ConversationManager {
     const message = '🎨 *Portfolio Tech Tecnic*\n\nMira algunos de nuestros proyectos:\nhttps://techtecnic.com/portafolio\n\n¿Necesitas algo específico? Estamos aquí para ayudarte.';
     await whatsappService.sendMessage(userId, message);
     return this.showMainMenu(userId);
+  }
+
+  /**
+   * Cerrar sesión con despedida
+   */
+  async closeSession(userId) {
+    const farewell = `¡Gracias por confiar en Tech Tecnic! 👋\n\nSi necesitas algo más, solo escribe *hola* para volver a comenzar.\n\n¡Que tengas un excelente día!`;
+    sessionManager.clearFlow(userId);
+    await whatsappService.sendMessage(userId, farewell);
   }
 
   /**

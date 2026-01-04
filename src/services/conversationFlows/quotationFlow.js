@@ -275,10 +275,11 @@ ${plan.includes.slice(0, 5).map(i => `• ${i}`).join('\n')}
    */
   async handleConfirmation(userId, option) {
     const flowData = sessionManager.getFlowData(userId);
+    const conversationManager = (await import('../conversationManager.js')).default;
 
     if (option === 'cotiz_no') {
       sessionManager.clearFlow(userId);
-      await whatsappService.sendMessage(userId, '👌 Entendido. Si cambias de opinión, estaremos aquí para ayudarte.');
+      await conversationManager.closeSession(userId);
       return;
     }
 

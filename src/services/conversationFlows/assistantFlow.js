@@ -7,6 +7,7 @@
 import sessionManager from '../sessionManager.js';
 import whatsappService from '../whatsappService.js';
 import openAiService from '../openAiService.js';
+import humanHandoffFlow from './humanHandoffFlow.js';
 
 const ASSISTANT_STEPS = {
   question: 'question',
@@ -26,10 +27,13 @@ class AssistantFlow {
   async initiate(userId) {
     sessionManager.setFlow(userId, 'assistant', {
       step: ASSISTANT_STEPS.question,
-      data: {}
+      data: {
+        questionCount: 0,
+        maxQuestions: 3
+      }
     });
 
-    const message = `❓ *Asistente Tech Tecnic*\n\n¿Qué pregunta tienes sobre nuestros servicios, tecnología o proyectos?`;
+    const message = `❓ *Asistente Tech Tecnic*\n\n¿Qué pregunta tienes sobre nuestros servicios, tecnología o proyectos?\n\n📋 Puedes hacer hasta 3 preguntas, luego te conectaremos con un especialista.`;
     await whatsappService.sendMessage(userId, message);
   }
 
@@ -55,9 +59,27 @@ class AssistantFlow {
    * Procesar pregunta del usuario
    */
   async processQuestion(userId, question) {
+    const flowData = sessionManager.getFlowData(userId);
+    const conversationManager = (await import('../conversationManager.js')).default;
+    
     if (question.length < 5) {
       await whatsappService.sendMessage(userId, '❌ Por favor, formula una pregunta más clara.');
       return;
+    }
+
+    // Incrementar contador de preguntas
+    flowData.questionCount = (flowData.questionCount || 0) + 1;
+    sessionManager.updateFlowData(userId, flowData);
+
+    // Verificar si alcanzó el límite de preguntas
+    if (flowData.questionCount > flowData.maxQuestions) {
+      console.log(`⚠️ Usuario ${userId} alcanzó límite de ${flowData.maxQuestions} preguntas`);
+      sessionManager.clearFlow(userId);
+      
+      const escalationMessage = `Has alcanzado el límite de preguntas.\n\n👨‍💻 Conectándote con un especialista de Tech Tecnic que podrá ayudarte mejor...`;
+      await whatsappService.sendMessage(userId, escalationMessage);
+      
+      return humanHandoffFlow.initiate(userId);
     }
 
     // Mostrar que estamos procesando
@@ -79,7 +101,17 @@ class AssistantFlow {
       // Enviar respuesta
       await whatsappService.sendMessage(userId, response);
 
+      // Mostrar cuántas preguntas quedan
+      const remainingQuestions = flowData.maxQuestions - flowData.questionCount;
+      let feedbackText = 'Feedback:';
+      if (remainingQuestions <= 1) {
+        feedbackText += ` (Última pregunta disponible)`;
+      } else {
+        feedbackText += ` (${remainingQuestions} preguntas restantes)`;
+      }
+
       // Pedir feedback
+
       this.showFeedbackButtons(userId);
 
     } catch (error) {

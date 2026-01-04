@@ -237,10 +237,11 @@ class AppointmentFlow {
    */
   async handleConfirmation(userId, option) {
     const flowData = sessionManager.getFlowData(userId);
+    const conversationManager = (await import('../conversationManager.js')).default;
 
     if (option === 'confirm_no') {
       sessionManager.clearFlow(userId);
-      await whatsappService.sendMessage(userId, '❌ Cita cancelada. Podemos agendar nuevamente cuando lo desees.');
+      await conversationManager.closeSession(userId);
       return;
     }
 
@@ -275,9 +276,6 @@ Gracias ${flowData.name}, hemos registrado tu solicitud.
 
         sessionManager.clearFlow(userId);
         await whatsappService.sendMessage(userId, confirmMessage);
-
-        // Mostrar menú principal nuevamente
-        // (En conversationManager se maneja el retorno al menú)
 
       } catch (error) {
         console.error('Error guardando cita:', error);

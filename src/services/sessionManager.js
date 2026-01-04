@@ -7,7 +7,7 @@
 class SessionManager {
   constructor() {
     this.sessions = new Map();
-    this.SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutos
+    this.SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutos de inactividad
     this.startCleanupInterval();
   }
 
