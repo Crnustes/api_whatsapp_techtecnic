@@ -37,32 +37,64 @@ const SHEET_CONFIG = {
 
 /**
  * Obtener cliente autenticado
- * Soporta tanto credenciales.json como variables de entorno
+ * Soporta tanto credenciales.json como variables de entorno (Railway o local)
  */
 async function getAuthClient() {
   let credentials;
+  let credentialSource = null;
 
-  // Prioridad 1: Variable de entorno GOOGLE_CREDENTIALS
+  // Intentar diferentes fuentes de credenciales en orden de prioridad
+  
+  // Prioridad 1: Variable de entorno GOOGLE_CREDENTIALS (Railway)
   if (process.env.GOOGLE_CREDENTIALS) {
     try {
+      console.log("📌 Usando GOOGLE_CREDENTIALS desde variable de entorno...");
       credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+      credentialSource = "GOOGLE_CREDENTIALS env var";
     } catch (error) {
       console.error("❌ Error parsing GOOGLE_CREDENTIALS:", error.message);
-      throw new Error("Invalid GOOGLE_CREDENTIALS JSON format");
+      console.error("Variable value:", process.env.GOOGLE_CREDENTIALS.substring(0, 50) + "...");
     }
   }
-  // Prioridad 2: Archivo credentials.json (local development)
-  else {
+
+  // Prioridad 2: Variable de entorno GOOGLE_CREDENTIALS_JSON (alternativa)
+  if (!credentials && process.env.GOOGLE_CREDENTIALS_JSON) {
+    try {
+      console.log("📌 Usando GOOGLE_CREDENTIALS_JSON desde variable de entorno...");
+      credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+      credentialSource = "GOOGLE_CREDENTIALS_JSON env var";
+    } catch (error) {
+      console.error("❌ Error parsing GOOGLE_CREDENTIALS_JSON:", error.message);
+    }
+  }
+
+  // Prioridad 3: Archivo credentials.json (local development)
+  if (!credentials) {
     try {
       const credPath = path.join(process.cwd(), "src/credentials", "credentials.json");
+      console.log("📌 Intentando leer credentials.json desde:", credPath);
       const fs = await import("fs").then(m => m.default);
       const credFile = fs.readFileSync(credPath, "utf8");
       credentials = JSON.parse(credFile);
+      credentialSource = "credentials.json file";
     } catch (error) {
       console.error("❌ Error loading credentials.json:", error.message);
-      throw new Error("Credentials not found. Set GOOGLE_CREDENTIALS env var or place credentials.json in src/credentials/");
     }
   }
+
+  if (!credentials) {
+    console.error("🔴 Variables de entorno disponibles (primeras 5):", Object.keys(process.env).filter(k => k.includes("GOOGLE") || k.includes("CREDENTIAL")).slice(0, 5));
+    throw new Error(
+      "❌ Credentials not found!\n" +
+      "Opciones:\n" +
+      "1. Railway: Agregue variable 'GOOGLE_CREDENTIALS' en la pestaña Variables\n" +
+      "2. Local: Coloque credentials.json en src/credentials/\n" +
+      "3. Variable alternativa: GOOGLE_CREDENTIALS_JSON"
+    );
+  }
+
+  console.log("✅ Credenciales cargadas desde:", credentialSource);
+  console.log("📊 Project ID:", credentials.project_id);
 
   const auth = new google.auth.GoogleAuth({
     credentials,
