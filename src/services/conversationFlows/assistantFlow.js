@@ -81,17 +81,6 @@ class AssistantFlow {
     flowData.questionCount = (flowData.questionCount || 0) + 1;
     sessionManager.updateFlowData(userId, flowData);
 
-    // Verificar si alcanzó el límite de preguntas
-    if (flowData.questionCount > flowData.maxQuestions) {
-      console.log(`⚠️ Usuario ${userId} alcanzó límite de ${flowData.maxQuestions} preguntas`);
-      sessionManager.clearFlow(userId);
-      
-      const escalationMessage = `Has alcanzado el límite de preguntas.\n\n👨‍💻 Conectándote con un especialista de Tech Tecnic que podrá ayudarte mejor...`;
-      await whatsappService.sendMessage(userId, escalationMessage);
-      
-      return humanHandoffFlow.initiate(userId);
-    }
-
     // Mostrar que estamos procesando
     await whatsappService.sendMessage(userId, '⏳ Buscando la mejor respuesta...');
 
@@ -111,17 +100,7 @@ class AssistantFlow {
       // Enviar respuesta
       await whatsappService.sendMessage(userId, response);
 
-      // Mostrar cuántas preguntas quedan
-      const remainingQuestions = flowData.maxQuestions - flowData.questionCount;
-      let feedbackText = 'Feedback:';
-      if (remainingQuestions <= 1) {
-        feedbackText += ` (Última pregunta disponible)`;
-      } else {
-        feedbackText += ` (${remainingQuestions} preguntas restantes)`;
-      }
-
-      // Pedir feedback
-
+      // Pedir feedback y verificar límite de preguntas
       this.showFeedbackButtons(userId);
 
     } catch (error) {
@@ -172,6 +151,18 @@ Si necesita hablar con un especialista, ofrécelo siempre como opción.`
    * Mostrar botones de feedback
    */
   async showFeedbackButtons(userId) {
+    const flowData = sessionManager.getFlowData(userId);
+    const remainingQuestions = flowData.maxQuestions - flowData.questionCount;
+    
+    // Si no hay más preguntas disponibles, solo mostrar opción de escalada
+    if (remainingQuestions <= 0) {
+      const escalationMessage = `Has alcanzado el límite de 3 preguntas.\n\n👨‍💻 Conectándote con un especialista de Tech Tecnic que podrá ayudarte mejor...`;
+      await whatsappService.sendMessage(userId, escalationMessage);
+      sessionManager.clearFlow(userId);
+      return humanHandoffFlow.initiate(userId);
+    }
+
+    // Si hay preguntas disponibles, mostrar opciones normales
     const feedbackMessage = '¿Te fue útil la respuesta?';
     await whatsappService.sendInteractiveButtons(userId, feedbackMessage, FEEDBACK_BUTTONS);
   }
@@ -258,11 +249,30 @@ Si necesita hablar con un especialista, ofrécelo siempre como opción.`
    * Manejar otra pregunta
    */
   async handleAnotherQuestion(userId) {
+    const flowData = sessionManager.getFlowData(userId);
+    const remainingQuestions = flowData.maxQuestions - flowData.questionCount;
+
+    // Verificar si hay preguntas disponibles
+    if (remainingQuestions <= 0) {
+      console.log(`⚠️ Usuario ${userId} alcanzó límite de preguntas`);
+      const escalationMessage = `Has alcanzado el límite de 3 preguntas.\n\n👨‍💻 Conectándote con un especialista de Tech Tecnic que podrá ayudarte mejor...`;
+      await whatsappService.sendMessage(userId, escalationMessage);
+      sessionManager.clearFlow(userId);
+      return humanHandoffFlow.initiate(userId);
+    }
+
+    // Permitir siguiente pregunta
     sessionManager.updateFlowData(userId, {
       step: ASSISTANT_STEPS.question
     });
 
-    const message = '✅ Adelante, ¿cuál es tu siguiente pregunta?';
+    let message = '✅ Adelante, ¿cuál es tu siguiente pregunta?';
+    if (remainingQuestions === 1) {
+      message += '\n\n(⚠️ Esta es tu última pregunta disponible)';
+    } else {
+      message += `\n\n(Preguntas restantes: ${remainingQuestions - 1})`;
+    }
+    
     await whatsappService.sendMessage(userId, message);
   }
 
