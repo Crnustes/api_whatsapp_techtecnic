@@ -28,9 +28,17 @@ class ConversationManager {
     const userId = message.from;
     const session = sessionManager.getSession(userId);
 
+    console.log(`\n👤 Usuario: ${userId}`);
+    console.log(`   Flujo actual: ${session.currentFlow || 'ninguno'}`);
+
     // Guardar en historial
     if (message.type === 'text') {
-      sessionManager.addToHistory(userId, 'user', message.text.body);
+      const text = message.text.body;
+      console.log(`   Mensaje: "${text}"`);
+      sessionManager.addToHistory(userId, 'user', text);
+    } else if (message.type === 'interactive') {
+      const buttonId = message.interactive?.button_reply?.id;
+      console.log(`   Botón: ${buttonId}`);
     }
 
     // Obtener nombre del cliente
@@ -39,10 +47,12 @@ class ConversationManager {
 
     // Manejar según tipo de flujo actual
     if (session.currentFlow) {
+      console.log(`   → Continuando flujo: ${session.currentFlow}`);
       return this.continueFlow(userId, message, session);
     }
 
     // Si no hay flujo activo, procesar como nuevo mensaje
+    console.log(`   → Procesando como nuevo mensaje`);
     return this.handleNewMessage(userId, message, clientName);
   }
 
@@ -54,19 +64,23 @@ class ConversationManager {
 
     if (message.type === 'text') {
       const text = message.text.body.toLowerCase().trim();
+      console.log(`   → Mensaje de texto: "${text}"`);
 
       if (this.isGreeting(text)) {
         // Bienvenida personalizada
+        console.log(`   🎯 Es un saludo → enviando bienvenida`);
         return this.sendWelcome(userId, messageId, clientName);
       }
 
       if (text.includes('humano') || text.includes('agente') || text.includes('persona')) {
         // Usuario quiere hablar con un agente
+        console.log(`   🎯 Solicitud de agente → escalando`);
         await whatsappService.markAsRead(messageId);
         return humanHandoffFlow.initiate(userId);
       }
 
       // Mensaje de texto sin contexto → enviar menú
+      console.log(`   🎯 Mensaje sin contexto → mostrando menú`);
       await whatsappService.markAsRead(messageId);
       return this.showMainMenu(userId);
     }
@@ -74,6 +88,7 @@ class ConversationManager {
     if (message.type === 'interactive') {
       // Usuario seleccionó botón del menú
       const option = message.interactive?.button_reply?.id?.toLowerCase();
+      console.log(`   🎯 Botón seleccionado: ${option}`);
       await whatsappService.markAsRead(messageId);
       return this.handleMenuOption(userId, option);
     }
@@ -84,6 +99,21 @@ class ConversationManager {
    */
   async continueFlow(userId, message, session) {
     const messageId = message.id;
+
+    // Si es un saludo mientras hay flujo activo, reiniciar
+    if (message.type === 'text') {
+      const text = message.text.body.toLowerCase().trim();
+      if (this.isGreeting(text)) {
+        console.log(`   ✳️ Saludo detectado en flujo ${session.currentFlow}`);
+        sessionManager.clearFlow(userId);
+        await whatsappService.markAsRead(messageId);
+        const clientName = sessionManager.getMetadata(userId, 'clientName') || 'amigo';
+        console.log(`   → Reiniciando flujo y mostrando bienvenida`);
+        return this.sendWelcome(userId, messageId, clientName);
+      }
+    }
+
+    console.log(`   → Delegando a flujo específico: ${session.currentFlow}`);
 
     switch (session.currentFlow) {
       case 'appointment':
@@ -103,6 +133,7 @@ class ConversationManager {
         return humanHandoffFlow.continueFlow(userId, message);
 
       default:
+        console.log(`   ⚠️ Flujo desconocido: ${session.currentFlow}`);
         sessionManager.clearFlow(userId);
         await whatsappService.markAsRead(messageId);
         return this.showMainMenu(userId);
@@ -137,19 +168,43 @@ class ConversationManager {
    * Enviar bienvenida personalizada
    */
   async sendWelcome(userId, messageId, clientName) {
-    const welcomeText = `¡Hola ${clientName}! 👋\n\nBienvenido a Tech Tecnic, tu agencia de desarrollo web, móvil y automatización.\n\n¿En qué podemos ayudarte hoy?`;
+    try {
+      console.log(`   👋 Enviando bienvenida para ${clientName}`);
+      const welcomeText = `¡Hola ${clientName}! 👋\n\nBienvenido a Tech Tecnic, tu agencia de desarrollo web, móvil y automatización.\n\n¿En qué podemos ayudarte hoy?`;
 
-    await whatsappService.markAsRead(messageId);
-    await whatsappService.sendMessage(userId, welcomeText);
-    return this.showMainMenu(userId);
+      await whatsappService.markAsRead(messageId);
+      console.log(`   ✅ Mensaje leído`);
+      
+      await whatsappService.sendMessage(userId, welcomeText);
+      console.log(`   ✅ Texto de bienvenida enviado`);
+      
+      // Pequeño delay para asegurar que se procesa el mensaje anterior
+      console.log(`   ⏳ Esperando 500ms antes de menú...`);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log(`   ✅ Delay completado`);
+      
+      await this.showMainMenu(userId);
+    } catch (error) {
+      console.error('Error en sendWelcome:', error);
+      await whatsappService.sendMessage(userId, '❌ Ocurrió un error. Por favor intenta de nuevo.');
+    }
   }
 
   /**
    * Mostrar menú principal
    */
   async showMainMenu(userId) {
-    const menuText = '📌 Selecciona una opción:';
-    return whatsappService.sendInteractiveButtons(userId, menuText, MENU_BUTTONS);
+    try {
+      console.log(`   📋 Enviando menú principal a ${userId}`);
+      const menuText = '📌 Selecciona una opción:';
+      const result = await whatsappService.sendInteractiveButtons(userId, menuText, MENU_BUTTONS);
+      console.log(`   ✅ Menú enviado exitosamente`);
+      return result;
+    } catch (error) {
+      console.error(`   ❌ Error mostrando menú:`, error.message);
+      console.log(`   → Enviando menú fallback (texto)`);
+      await whatsappService.sendMessage(userId, 'Opciones: 1. Agendar reunión, 2. Cotización, 3. Consulta, 4. Portfolio');
+    }
   }
 
   /**
