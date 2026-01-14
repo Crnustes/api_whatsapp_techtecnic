@@ -1,13 +1,18 @@
 /**
  * Assistant Flow
- * Flujo para consultas generales usando OpenAI
+ * Flujo para consultas generales usando IA
  * Mantiene contexto de conversación y ofrece escalado a agentes
+ * 
+ * Configuración en:
+ * - src/config/aiPrompts.js (ASSISTANT_DETAILED)
+ * - src/config/dataServices.js (CONVERSATION_FLOWS.assistant)
  */
 
 import sessionManager from '../sessionManager.js';
 import whatsappService from '../whatsappService.js';
-import openAiService from '../openAiService.js';
+import aiAdapter from '../../adapters/aiAdapter.js';
 import humanHandoffFlow from './humanHandoffFlow.js';
+import { CONVERSATION_FLOWS } from '../../config/dataServices.js';
 
 const ASSISTANT_STEPS = {
   question: 'question',
@@ -31,16 +36,17 @@ class AssistantFlow {
    * Iniciar flujo de asistente
    */
   async initiate(userId) {
+    const config = CONVERSATION_FLOWS.assistant;
+    
     sessionManager.setFlow(userId, 'assistant', {
       step: ASSISTANT_STEPS.question,
       data: {
         questionCount: 0,
-        maxQuestions: 3
+        maxQuestions: config.maxQuestions
       }
     });
 
-    const message = `❓ *Asistente Tech Tecnic*\n\n¿Qué pregunta tienes sobre nuestros servicios, tecnología o proyectos?\n\n📋 Puedes hacer hasta 3 preguntas, luego te conectaremos con un especialista.`;
-    await whatsappService.sendMessage(userId, message);
+    await whatsappService.sendMessage(userId, config.initMessage);
   }
 
   /**
@@ -70,7 +76,7 @@ class AssistantFlow {
    */
   async processQuestion(userId, question) {
     const flowData = sessionManager.getFlowData(userId);
-    const conversationManager = (await import('../conversationManager.js')).default;
+    const config = CONVERSATION_FLOWS.assistant;
     
     if (question.length < 5) {
       await whatsappService.sendMessage(userId, '❌ Por favor, formula una pregunta más clara.');
@@ -88,8 +94,14 @@ class AssistantFlow {
       // Obtener historial de conversación para contexto
       const history = sessionManager.getConversationContext(userId);
 
-      // Generar respuesta con OpenAI
-      const response = await this.getAssistantResponse(question, history);
+      // Generar respuesta con IA (ASSISTANT_DETAILED)
+      const response = await aiAdapter.chatWithContext(
+        history.map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        'ASSISTANT_DETAILED'
+      );
 
       sessionManager.updateFlowData(userId, {
         step: ASSISTANT_STEPS.feedback,
@@ -107,44 +119,6 @@ class AssistantFlow {
       console.error('Error en asistente:', error);
       await whatsappService.sendMessage(userId, '❌ Tuve un problema procesando tu pregunta. Por favor, intenta nuevamente.');
     }
-  }
-
-  /**
-   * Obtener respuesta de OpenAI con contexto
-   */
-  async getAssistantResponse(question, history) {
-    // Construir mensajes con contexto
-    const messages = [
-      {
-        role: 'system',
-        content: `Eres el Asistente IA de Tech Tecnic, una agencia de desarrollo especializada en:
-• Desarrollo Web (React, Next.js, Vue.js)
-• Aplicaciones Móviles (React Native, Flutter)
-• Ecommerce (Shopify, WooCommerce, soluciones custom)
-• Automatización y APIs
-• Integración de sistemas
-
-Debes ser:
-- Profesional pero accesible
-- Conciso (máximo 3-4 líneas en WhatsApp)
-- Práctico y directo
-- Honesto sobre limitaciones
-- Proactivo en sugerir soluciones
-
-Si el usuario quiere información que no tienes, sugiere agendar una llamada.
-Si necesita hablar con un especialista, ofrécelo siempre como opción.`
-      },
-      ...history.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      })),
-      {
-        role: 'user',
-        content: question
-      }
-    ];
-
-    return await openAiService(messages);
   }
 
   /**

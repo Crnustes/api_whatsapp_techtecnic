@@ -2,6 +2,8 @@
  * Conversation Manager
  * Orquesta los diferentes flujos conversacionales
  * Punto central de ruteo de mensajes
+ * 
+ * Configuración en: src/config/dataServices.js (CONVERSATION_FLOWS)
  */
 
 import appointmentFlow from './conversationFlows/appointmentFlow.js';
@@ -10,14 +12,10 @@ import assistantFlow from './conversationFlows/assistantFlow.js';
 import humanHandoffFlow from './conversationFlows/humanHandoffFlow.js';
 import sessionManager from './sessionManager.js';
 import whatsappService from './whatsappService.js';
+import { CONVERSATION_FLOWS, KEYWORDS } from '../config/dataServices.js';
 
-const MENU_BUTTONS = [
-  { type: 'reply', reply: { id: 'option_agenda', title: 'Agendar Reunion' } },
-  { type: 'reply', reply: { id: 'option_quotation', title: 'Cotizacion' } },
-  { type: 'reply', reply: { id: 'option_question', title: 'Consulta' } },
-];
-
-const GREETINGS = ['hola', 'hello', 'hi', 'buenos', 'buenas', 'hey', 'ey', 'que onda'];
+const MENU_BUTTONS = CONVERSATION_FLOWS.welcome.buttons;
+const GREETINGS = KEYWORDS.greetings;
 
 class ConversationManager {
   /**
@@ -76,7 +74,7 @@ class ConversationManager {
       }
 
       // Detectar solicitud de asesor/agente
-      if (text.includes('asesor') || text.includes('humano') || text.includes('agente') || text.includes('persona')) {
+      if (this.matchesKeywords(text, KEYWORDS.escalation)) {
         console.log(`   🎯 Solicitud de asesor → escalando a humanHandoffFlow`);
         sessionManager.clearFlow(userId);
         await whatsappService.markAsRead(messageId);
@@ -84,7 +82,7 @@ class ConversationManager {
       }
 
       // Verificar si es una selección de número (1, 2, 3, 4)
-      if (['1', '2', '3', '4'].includes(text)) {
+      if (KEYWORDS.menuOptions.includes(text)) {
         console.log(`   🎯 Selección de menú por número: ${text}`);
         await whatsappService.markAsRead(messageId);
         return this.handleMenuOption(userId, text);
@@ -277,6 +275,14 @@ class ConversationManager {
   getClientName(senderInfo) {
     const fullName = senderInfo?.profile?.name || senderInfo?.wa_id || 'amigo';
     return fullName.split(' ')[0];
+  }
+
+  /**
+   * Verificar si el texto coincide con lista de palabras clave
+   */
+  matchesKeywords(text, keywords) {
+    if (!Array.isArray(keywords)) return false;
+    return keywords.some(keyword => text.includes(keyword));
   }
 
   /**

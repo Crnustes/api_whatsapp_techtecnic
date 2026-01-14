@@ -1,13 +1,16 @@
 /**
- * Quotation Flow - Mejorado con OpenAI
+ * Quotation Flow - Mejorado con IA
  * Flujo inteligente de cotizaciones sin mostrar precios aún
- * Usa OpenAI para analizar necesidades y recomendar el mejor plan
+ * Usa IA para analizar necesidades y recomendar el mejor plan
+ * 
+ * Configuración en: src/config/dataServices.js (CONVERSATION_FLOWS.quotation)
  */
 
 import sessionManager from '../sessionManager.js';
 import whatsappService from '../whatsappService.js';
-import openAiService from '../openAiService.js';
+import aiAdapter from '../../adapters/aiAdapter.js';
 import googleSheetsService from '../googleSheetsService.js';
+import { CONVERSATION_FLOWS } from '../../config/dataServices.js';
 
 const QUOTATION_STEPS = {
   description: 'description',
@@ -19,92 +22,22 @@ const CONFIRM_BUTTONS = [
   { type: 'reply', reply: { id: 'cotiz_no', title: 'Cancelar' } },
 ];
 
-// Planes disponibles con descripciones (sin precios)
-const PLANS = {
-  emprendedor: {
-    name: 'Plan Emprendedor',
-    ideal: 'Lanzar tu presencia digital',
-    includes: [
-      'Landing page moderna (1-2 secciones)',
-      'Dominio, hosting y SSL (1 año incluido)',
-      'Diseño responsivo mobile-first',
-      'Formulario de contacto + WhatsApp',
-      'Optimización SEO básica',
-      'Google Analytics configurado',
-      '1 revisión incluida'
-    ],
-    price_cop: 400000
-  },
-  profesional: {
-    name: 'Plan Profesional',
-    ideal: 'Empresas que buscan destacar',
-    includes: [
-      'Sitio completo (3-5 secciones)',
-      'SEO avanzado + analítica (GTM, GA4)',
-      'Diseño personalizado premium',
-      'Correos corporativos incluidos',
-      'Integración con redes sociales',
-      'Blog o noticias opcional',
-      'Mantenimiento mensual opcional',
-      '3 revisiones incluidas'
-    ],
-    price_cop: 900000
-  },
-  avanzado: {
-    name: 'Plan Avanzado',
-    ideal: 'E-commerce y aplicaciones web',
-    includes: [
-      'E-commerce completo (WooCommerce/React)',
-      'Integraciones con IA y automatizaciones',
-      'Optimización SEO + Core Web Vitals',
-      'Panel de administración personalizado',
-      'Capacitación post-entrega',
-      'Soporte técnico 3 meses',
-      'Migraciones y backups automáticos',
-      'Revisiones ilimitadas en desarrollo'
-    ],
-    price_cop: 1800000
-  },
-  partner: {
-    name: 'Plan Partner',
-    ideal: 'Agencias y desarrollo white-label',
-    includes: [
-      'Desarrollo white-label (tu marca)',
-      'Proyectos escalables y complejos',
-      'Confidencialidad y NDA',
-      'Tarifas preferenciales por volumen',
-      'Soporte técnico dedicado',
-      'Arquitectura empresarial',
-      'Integraciones avanzadas',
-      'Consultoría técnica incluida'
-    ],
-    price_cop: 'personalizado'
-  }
-};
+// Obtener planes de configuración
+const PLANS = CONVERSATION_FLOWS.quotation.plans;
 
 class QuotationFlow {
   /**
    * Iniciar flujo de cotización
    */
   async initiate(userId) {
+    const config = CONVERSATION_FLOWS.quotation;
+    
     sessionManager.setFlow(userId, 'quotation', {
       step: QUOTATION_STEPS.description,
       data: {}
     });
 
-    const message = `💰 *Solicitar Cotización*
-
-Para brindarte la mejor recomendación personalizada, cuéntanos:
-
-📝 ¿Qué proyecto tienes en mente? Describe:
-• ¿Qué tipo de sitio/app necesitas?
-• ¿Cuál es el objetivo principal?
-• ¿Qué funcionalidades te gustaría incluir?
-• ¿Tienes alguna referencia o ejemplo?
-
-Si no estás seguro, escribe: *"no estoy seguro"* y te ayudaremos.`;
-
-    await whatsappService.sendMessage(userId, message);
+    await whatsappService.sendMessage(userId, config.initMessage);
   }
 
   /**
@@ -214,10 +147,10 @@ NO menciones precios. Solo enfócate en la solución técnica ideal.`;
     const userPrompt = `Proyecto del cliente:\n\n${projectDescription}`;
 
     try {
-      const response = await openAiService([
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ]);
+      const response = await aiAdapter.chat(
+        'QUOTATION_GENERATOR',
+        userPrompt
+      );
 
       if (!response) return null;
 
@@ -234,7 +167,7 @@ NO menciones precios. Solo enfócate en la solución técnica ideal.`;
 
       return parsed;
     } catch (error) {
-      console.error('Error analyzing with OpenAI:', error);
+      console.error('Error analyzing with IA:', error);
       return null;
     }
   }

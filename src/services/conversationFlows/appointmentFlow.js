@@ -2,12 +2,15 @@
  * Appointment Flow
  * Flujo completo para agendar reuniones
  * Recopila: nombre, email, teléfono, servicio, descripción, fecha/hora
+ * 
+ * Configuración en: src/config/dataServices.js (CONVERSATION_FLOWS.appointment)
  */
 
 import sessionManager from '../sessionManager.js';
 import whatsappService from '../whatsappService.js';
 import googleSheetsService from '../googleSheetsService.js';
 import { validateEmail, normalizePhone, formatDateTime } from '../../utils/validators.js';
+import { CONVERSATION_FLOWS } from '../../config/dataServices.js';
 
 const APPOINTMENT_STEPS = {
   name: 'name',
@@ -18,16 +21,8 @@ const APPOINTMENT_STEPS = {
   confirmation: 'confirmation'
 };
 
-// Servicio se solicita como texto libre con ejemplos
-const SERVICE_EXAMPLES = [
-  'Sitio web corporativo',
-  'Tienda online',
-  'App móvil iOS/Android',
-  'Sistema de gestión',
-  'Landing page',
-  'Rediseño de sitio',
-  'Consultoría técnica'
-];
+// Obtener servicios de configuración
+const SERVICE_EXAMPLES = CONVERSATION_FLOWS.appointment.serviceExamples;
 
 const CONFIRM_BUTTONS = [
   { type: 'reply', reply: { id: 'confirm_yes', title: 'Sí, confirmar' } },
@@ -39,6 +34,8 @@ class AppointmentFlow {
    * Iniciar flujo de agendamiento
    */
   async initiate(userId, userPhone = '') {
+    const config = CONVERSATION_FLOWS.appointment;
+    
     sessionManager.setFlow(userId, 'appointment', {
       step: APPOINTMENT_STEPS.name,
       data: {
@@ -46,8 +43,7 @@ class AppointmentFlow {
       }
     });
 
-    const message = '📅 *Agendar Reunión*\n\nTe ayudaremos a agendar una llamada con nuestro equipo. ¿Cuál es tu nombre?';
-    await whatsappService.sendMessage(userId, message);
+    await whatsappService.sendMessage(userId, config.initMessage);
   }
 
   /**

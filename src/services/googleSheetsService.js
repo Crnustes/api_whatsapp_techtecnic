@@ -1,39 +1,19 @@
 import path from "path";
 import { google } from "googleapis";
+import { getDataServiceConfig } from "../config/dataServices.js";
 
 const sheets = google.sheets("v4");
 
 /**
  * Google Sheets Service Mejorado
  * Soporta múltiples hojas con configuración centralizada
+ * 
+ * La configuración de hojas ahora está en: src/config/dataServices.js
+ * Para agregar nuevas hojas o cambiar configuración, edita dataServices.js
  */
 
-// Configuración de hojas
-const SHEET_CONFIG = {
-  spreadsheetId: "1EE1ai1QrBXI0SZ3DdvrZrrn3U6DkAD9ILKzTMWezSnM",
-  sheets: {
-    reservas: {
-      name: "reservas",
-      range: "reservas!A2:H",
-      headers: ["Timestamp", "Nombre", "Email", "Teléfono", "Empresa", "Servicio", "Descripción", "Estado"]
-    },
-    cotizaciones: {
-      name: "cotizaciones",
-      range: "cotizaciones!A2:H",
-      headers: ["Timestamp", "Email", "Cliente", "Tipo_Proyecto", "Complejidad", "Opción", "Monto", "Estado"]
-    },
-    conversaciones: {
-      name: "conversaciones",
-      range: "conversaciones!A2:F",
-      headers: ["Timestamp", "User_ID", "Nombre", "Interacción", "Resumen", "Estado"]
-    },
-    escalados: {
-      name: "escalados",
-      range: "escalados!A2:E",
-      headers: ["Timestamp", "User_ID", "Cliente", "Problema", "Estado"]
-    }
-  }
-};
+// Obtener configuración desde dataServices
+const SHEET_CONFIG = getDataServiceConfig('GOOGLE_SHEETS');
 
 /**
  * Obtener cliente autenticado
