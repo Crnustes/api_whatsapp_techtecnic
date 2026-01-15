@@ -12,6 +12,7 @@ import sessionManager from '../sessionManager.js';
 import whatsappService from '../whatsappService.js';
 import aiAdapter from '../../adapters/aiAdapter.js';
 import humanHandoffFlow from './humanHandoffFlow.js';
+import escalationService from '../escalationService.js';
 import { CONVERSATION_FLOWS } from '../../config/dataServices.js';
 
 const ASSISTANT_STEPS = {
@@ -130,6 +131,17 @@ class AssistantFlow {
     
     // Si no hay más preguntas disponibles, solo mostrar opción de escalada
     if (remainingQuestions <= 0) {
+      // Registrar escalación automática por límite de preguntas
+      if (escalationService.shouldEscalate(userId)) {
+        try {
+          console.log(`\n🚀 Registrando escalación automática (límite de preguntas) para usuario ${userId}...`);
+          await escalationService.createEscalation(userId, 'Alta');
+          console.log(`✅ Escalación registrada en Google Sheets`);
+        } catch (error) {
+          console.error(`❌ Error registrando escalación:`, error.message);
+        }
+      }
+
       const escalationMessage = `Has alcanzado el límite de 3 preguntas.\n\n👨‍💻 Conectándote con un especialista de Tech Tecnic que podrá ayudarte mejor...`;
       await whatsappService.sendMessage(userId, escalationMessage);
       sessionManager.clearFlow(userId);
@@ -229,6 +241,18 @@ class AssistantFlow {
     // Verificar si hay preguntas disponibles
     if (remainingQuestions <= 0) {
       console.log(`⚠️ Usuario ${userId} alcanzó límite de preguntas`);
+      
+      // Registrar escalación automática por límite de preguntas
+      if (escalationService.shouldEscalate(userId)) {
+        try {
+          console.log(`\n🚀 Registrando escalación automática (límite alcanzado) para usuario ${userId}...`);
+          await escalationService.createEscalation(userId, 'Alta');
+          console.log(`✅ Escalación registrada en Google Sheets`);
+        } catch (error) {
+          console.error(`❌ Error registrando escalación:`, error.message);
+        }
+      }
+
       const escalationMessage = `Has alcanzado el límite de 3 preguntas.\n\n👨‍💻 Conectándote con un especialista de Tech Tecnic que podrá ayudarte mejor...`;
       await whatsappService.sendMessage(userId, escalationMessage);
       sessionManager.clearFlow(userId);
@@ -258,13 +282,25 @@ class AssistantFlow {
       step: 'humanHandoff'
     });
 
+    // Verificar si debe registrarse una escalación
+    if (escalationService.shouldEscalate(userId)) {
+      try {
+        console.log(`\n🚀 Registrando escalación para usuario ${userId}...`);
+        await escalationService.createEscalation(userId, 'Media');
+        console.log(`✅ Escalación registrada en Google Sheets`);
+      } catch (error) {
+        console.error(`❌ Error registrando escalación:`, error.message);
+        // No interrumpir el flujo si falla el registro
+      }
+    }
+
     const message = `👤 *Te transferimos con un especialista.*\n\nUn agente experto revisará tu pregunta y te responderá en breve. Esperamos unos segundos...`;
     await whatsappService.sendMessage(userId, message);
 
     sessionManager.clearFlow(userId);
 
-    // Aquí irá la lógica de escalado (en humanHandoffFlow)
-    // Importar y llamar cuando esté implementado
+    // Llamar al flujo de transferencia humana
+    await humanHandoffFlow.initiate(userId);
   }
 }
 

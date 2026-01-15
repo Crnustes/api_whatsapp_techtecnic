@@ -19,7 +19,7 @@ const SHEET_CONFIG = getDataServiceConfig('GOOGLE_SHEETS');
  * Obtener cliente autenticado
  * Soporta tanto credenciales.json como variables de entorno (Railway o local)
  */
-async function getAuthClient() {
+export async function getAuthClient() {
   let credentials;
   let credentialSource = null;
 
@@ -87,7 +87,7 @@ async function getAuthClient() {
 /**
  * Agregar fila a una hoja específica
  */
-async function addRowToSheet(auth, sheetKey, values) {
+export async function addRowToSheet(auth, sheetKey, values) {
   const config = SHEET_CONFIG.sheets[sheetKey];
   
   if (!config) {

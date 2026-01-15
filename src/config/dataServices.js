@@ -28,8 +28,8 @@ export const DATA_SERVICES = {
       },
       escalados: {
         name: 'escalados',
-        range: 'escalados!A2:E',
-        headers: ['Timestamp', 'User_ID', 'Cliente', 'Problema', 'Estado']
+        range: 'escalados!A2:F',
+        headers: ['Timestamp', 'Nombre', 'Teléfono', 'Resumen', 'Calificación', 'Estado']
       }
     }
   }
