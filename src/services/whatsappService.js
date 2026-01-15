@@ -46,7 +46,7 @@ class WhatsAppService {
         mediaObject.video = { link: mediaUrl, caption: caption || '' };
         break;
       case 'document':
-        mediaObject.document = { link: mediaUrl, caption, filename: 'Servicios Tech Tecnic' };
+        mediaObject.document = { link: mediaUrl, caption, filename: 'Servicios Lemon Digital' };
         break;
       default:
         throw new Error('No hay soporte para este tipo de medio');

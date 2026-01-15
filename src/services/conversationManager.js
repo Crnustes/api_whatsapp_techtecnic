@@ -206,7 +206,7 @@ class ConversationManager {
   async sendWelcome(userId, messageId, clientName) {
     try {
       console.log(`   👋 Enviando bienvenida para ${clientName}`);
-      const welcomeText = `¡Hola ${clientName}! 👋\n\nBienvenido a Tech Tecnic, tu agencia de desarrollo web, móvil y automatización.\n\n¿En qué podemos ayudarte hoy?`;
+      const welcomeText = `¡Hola ${clientName}! 👋\n\nBienvenido a Lemon Digital, agencia de Marketing Digital estratégico en América Latina.\n\n¿En qué podemos ayudarte hoy?`;
 
       await whatsappService.markAsRead(messageId);
       console.log(`   ✅ Mensaje leído`);
@@ -248,7 +248,7 @@ class ConversationManager {
    * Enviar link de portfolio
    */
   async sendPortfolioLink(userId) {
-    const message = '🎨 *Portfolio Tech Tecnic*\n\nMira algunos de nuestros proyectos:\nhttps://techtecnic.com/portafolio\n\n¿Necesitas algo específico? Estamos aquí para ayudarte.';
+    const message = '🎨 *Portfolio Lemon Digital*\n\nMira algunos de nuestros proyectos en América Latina:\nhttps://lemon.digital/portafolio-digital-website/\n\n¿Necesitas una estrategia? Estamos aquí para ayudarte.';
     await whatsappService.sendMessage(userId, message);
     return this.showMainMenu(userId);
   }
@@ -257,7 +257,7 @@ class ConversationManager {
    * Cerrar sesión con despedida
    */
   async closeSession(userId) {
-    const farewell = `¡Gracias por confiar en Tech Tecnic! 👋\n\nSi necesitas algo más, solo escribe *hola* para volver a comenzar.\n\n¡Que tengas un excelente día!`;
+    const farewell = `¡Gracias por confiar en Lemon Digital! 👋\n\nSi necesitas algo más, solo escribe *hola* para volver a comenzar.\n\n¡Que tengas un excelente día!`;
     sessionManager.clearFlow(userId);
     await whatsappService.sendMessage(userId, farewell);
   }

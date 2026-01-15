@@ -1,150 +1,230 @@
 /**
- * Configuración de Quotation Engine
- * Define precios, opciones y features por proyecto
+ * Configuración de Quotation Engine para Lemon Digital
+ * Define precios, opciones y features por servicio de Marketing Digital
  * 
  * Ubicación para cambiar: Este archivo
  */
 
 export const QUOTATION_CONFIG = {
-  // Precios base por tipo de proyecto
+  // Precios base mensuales por servicio de Lemon
   basePrices: {
-    'Sitio Web': {
-      basic: 1500,
-      medium: 3500,
-      high: 7000
+    'Auditoría SEO': {
+      basico: 300,
+      medio: 500,
+      alto: 800
     },
-    'Ecommerce': {
-      basic: 3000,
-      medium: 8000,
-      high: 15000
+    'Diseño Web': {
+      basico: 600,
+      medio: 1200,
+      alto: 2000
     },
-    'App Móvil': {
-      basic: 5000,
-      medium: 12000,
-      high: 25000
+    'SEO + SEM': {
+      basico: 500,
+      medio: 1000,
+      alto: 1800
     },
-    'Automatización': {
-      basic: 2000,
-      medium: 5000,
-      high: 12000
+    'Marketing Contenidos': {
+      basico: 400,
+      medio: 800,
+      alto: 1500
     },
-    'Integración': {
-      basic: 1000,
-      medium: 3000,
-      high: 8000
+    'Lead Magnet + Email': {
+      basico: 400,
+      medio: 800,
+      alto: 1200
     },
-    'Otro': {
-      basic: 2000,
-      medium: 5000,
-      high: 10000
+    'Chatbots de IA': {
+      basico: 350,
+      medio: 750,
+      alto: 1500
+    },
+    'Estrategia 360': {
+      basico: 800,
+      medio: 1500,
+      alto: 3000
     }
   },
 
-  // Multiplicadores por timeline
-  timelineMultipliers: {
-    'ASAP': 1.4,        // +40% por urgencia
-    'Rápido': 1.2,      // +20%
-    'Normal': 1.0,      // Sin ajuste
-    'Flexible': 0.9     // -10% por más tiempo
+  // Multiplicadores por timeline/duración
+  durationMultipliers: {
+    '3 meses': 1.0,      // Base
+    '6 meses': 0.95,     // -5% descuento
+    '12 meses': 0.85,    // -15% descuento
+    'Flexible': 1.0      // Sin ajuste
   },
 
-  // Features por complejidad y tipo
+  // Features por servicio y nivel
   featuresByComplexity: {
-    'Sitio Web': {
-      'Básico': [
-        'Hasta 5 páginas',
-        'Responsive',
-        'Formulario de contacto',
-        'Hosting 1 año'
+    'Auditoría SEO': {
+      'Básica': [
+        'Análisis de 20 keywords',
+        'Reporte competencia',
+        'Optimización on-page básica',
+        '1 reporte'
       ],
-      'Medio': [
-        'Hasta 10 páginas',
-        'Responsive',
-        'CMS básico',
+      'Media': [
+        'Análisis de 50 keywords',
+        'Análisis técnico SEO',
+        'Reporte competencia avanzado',
+        'Auditoría backlinks',
+        '2 reportes'
+      ],
+      'Alta': [
+        'Análisis SEO completo',
+        'Auditoría técnica avanzada',
+        'Análisis competitivo 360°',
+        'Plan acción detallado',
+        'Consultoría monthly',
+        'Reportes semanales'
+      ]
+    },
+    'Diseño Web': {
+      'Básica': [
+        'Landing page moderna',
+        'Diseño responsivo',
+        'Optimización conversión',
+        '3 revisiones'
+      ],
+      'Media': [
+        'Sitio web completo (5-10 págs)',
+        'Diseño personalizado',
+        'SEO on-page',
         'Blog integrado',
-        'SEO básico',
-        'Hosting 1 año'
+        '5 revisiones'
       ],
-      'Alto': [
-        'Sitio escalable',
-        'CMS completo',
-        'Sistema de usuarios',
-        'Blog avanzado',
+      'Alta': [
+        'Sitio web escalable',
+        'Diseño premium',
+        'CMS integrado',
+        'E-commerce básico',
+        'Integraciones custom',
         'SEO avanzado',
-        'Integraciones múltiples',
-        'Soporte 3 meses',
-        'Hosting 1 año'
+        'Revisiones ilimitadas',
+        'Soporte 3 meses'
       ]
     },
-    'Ecommerce': {
-      'Básico': [
-        'Hasta 100 productos',
-        'Carrito básico',
-        'Pago con tarjeta',
-        'Gestión de inventario simple'
+    'SEO + SEM': {
+      'Básica': [
+        'Gestión 10 keywords',
+        'Campañas Google Ads básicas',
+        'Budget: $500/mes',
+        'Reporte mensual'
       ],
-      'Medio': [
-        'Hasta 1000 productos',
-        'Carrito avanzado',
-        'Múltiples métodos de pago',
-        'Gestión completa',
-        'Reportes básicos',
-        'Email marketing integrado'
+      'Media': [
+        'Gestión 30 keywords',
+        'SEO + Ads en Google',
+        'Redes Sociales (2 plataformas)',
+        'Budget: $1000-2000/mes',
+        'Reportes semanales'
       ],
-      'Alto': [
-        'Productos ilimitados',
-        'Carrito inteligente',
-        'Pagos múltiples',
-        'BI completo',
-        'Automatización',
-        'Integraciones (ERP, CRM)',
-        'Soporte 6 meses',
-        'Consultoría estratégica'
+      'Alta': [
+        'Estrategia SEO completa',
+        'Campañas SEM en múltiples canales',
+        'Redes Sociales gestión completa',
+        'Retargeting avanzado',
+        'Budget: $2000+/mes',
+        'Optimización continua',
+        'Asesor dedicado'
       ]
     },
-    'App Móvil': {
-      'Básico': [
-        'Plataforma única',
-        'Hasta 5 pantallas',
-        'API integrada',
-        'Push notifications'
+    'Marketing Contenidos': {
+      'Básica': [
+        '4 artículos al mes',
+        'SEO optimizado',
+        'Investigación keywords',
+        'Publicación en blog'
       ],
-      'Medio': [
-        'iOS + Android',
-        'Hasta 15 pantallas',
-        'Geolocalización',
-        'Offline mode',
-        'Analytics',
-        'Social login'
+      'Media': [
+        '8 artículos al mes',
+        'SEO avanzado',
+        'Infografías',
+        'Video scripts',
+        'Distribución en redes'
       ],
-      'Alto': [
-        'iOS + Android',
-        'Escalable',
-        'Características avanzadas',
-        'Pagos integrados',
-        'IA/ML básico',
-        'Soporte 6 meses',
+      'Alta': [
+        '12+ artículos al mes',
+        'Estrategia de contenidos',
+        'Videos producidos',
+        'Podcasts',
+        'Ebooks',
+        'Distribución multicanal',
+        'Asesor dedicado'
+      ]
+    },
+    'Lead Magnet + Email': {
+      'Básica': [
+        '1 Lead Magnet diseñado',
+        'Landing page',
+        '5 emails automatizados',
+        'Reporte básico'
+      ],
+      'Media': [
+        '2-3 Lead Magnets',
+        'Funnels completos',
+        'Secuencia 15 emails',
+        'Segmentación audience',
+        'Reportes detallados'
+      ],
+      'Alta': [
+        'Estrategia Lead Gen 360°',
+        'Múltiples Lead Magnets',
+        'Funnels avanzados',
+        '30+ emails secuencia',
+        'Integraciones CRM',
+        'Optimización continua',
+        'Consultoría monthly'
+      ]
+    },
+    'Chatbots de IA': {
+      'Básica': [
+        'Chatbot básico WhatsApp/Web',
+        'Respuestas predefinidas',
+        'Captura de leads simple',
+        'Horarios limitados',
+        'Reporte básico'
+      ],
+      'Media': [
+        'Chatbot IA conversacional',
+        'Multi-canal (WhatsApp, Web, Email)',
+        'Integración CRM',
+        'Disponibilidad 24/7',
+        'Escalado a agentes',
+        'Reportes detallados',
         'Mantenimiento incluido'
+      ],
+      'Alta': [
+        'Chatbot IA avanzado',
+        'Múltiples canales',
+        'Integración con sistemas (ERP, CRM)',
+        'Análisis de sentimiento',
+        'Personalización por usuario',
+        'Capacidad de venta automatizada',
+        'Asesor dedicado',
+        'SLA 99.9%'
       ]
     },
-    'Automatización': {
-      'Básico': [
-        'Hasta 3 procesos',
-        'Automación básica',
-        'Notificaciones'
+    'Estrategia 360': {
+      'Básica': [
+        'Auditoría Digital',
+        'Plan estratégico 3 meses',
+        '2 canales activados',
+        'Reportes mensuales'
       ],
-      'Medio': [
-        'Hasta 10 procesos',
-        'Lógica compleja',
-        'Integraciones',
-        'Reportes'
+      'Media': [
+        'Estrategia Digital completa',
+        '3-4 canales simultaneos',
+        'Content + Ads + Email',
+        'Lead Magnet incluido',
+        'Reportes semanales'
       ],
-      'Alto': [
-        'Procesos ilimitados',
-        'IA integrada',
-        'Múltiples integraciones',
-        'Dashboard avanzado',
-        'Soporte prioritario'
+      'Alta': [
+        'Estrategia 360° integral',
+        'Todos los canales',
+        'Equipo dedicado',
+        'Tecnología avanzada',
+        'Optimización AI',
+        'Reportes daily',
+        'SLA garantizado'
       ]
     }
   }
@@ -158,17 +238,17 @@ export const getBasePrices = () => {
 };
 
 /**
- * Obtener multiplicadores de timeline
+ * Obtener multiplicadores de duración
  */
-export const getTimelineMultipliers = () => {
-  return QUOTATION_CONFIG.timelineMultipliers;
+export const getDurationMultipliers = () => {
+  return QUOTATION_CONFIG.durationMultipliers;
 };
 
 /**
  * Obtener features por tipo y complejidad
  */
-export const getFeatures = (projectType, complexity) => {
-  return QUOTATION_CONFIG.featuresByComplexity[projectType]?.[complexity] || [];
+export const getFeatures = (serviceType, complexity) => {
+  return QUOTATION_CONFIG.featuresByComplexity[serviceType]?.[complexity] || [];
 };
 
 export default QUOTATION_CONFIG;

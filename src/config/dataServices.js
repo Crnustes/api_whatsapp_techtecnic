@@ -45,99 +45,103 @@ export const DATA_SERVICES = {
 export const CONVERSATION_FLOWS = {
   welcome: {
     name: 'Bienvenida',
-    greeting: '👋 ¡Hola! Bienvenido a Tech Tecnic. ¿En qué podemos ayudarte?',
+    greeting: '🍋 ¡Hola! Bienvenido a Lemon Digital. Somos una agencia de Marketing Digital que potencia tu negocio. ¿Qué necesitas?',
     buttons: [
-      { type: 'reply', reply: { id: 'option_agenda', title: 'Agendar Reunion' } },
-      { type: 'reply', reply: { id: 'option_quotation', title: 'Cotizacion' } },
-      { type: 'reply', reply: { id: 'option_question', title: 'Consulta' } },
+      { type: 'reply', reply: { id: 'option_audit', title: '📊 Auditoría Gratis' } },
+      { type: 'reply', reply: { id: 'option_quotation', title: '💰 Cotización' } },
+      { type: 'reply', reply: { id: 'option_question', title: '❓ Consulta' } },
     ]
   },
   assistant: {
     name: 'Asistente',
     maxQuestions: 3,
-    initMessage: `❓ *Asistente Tech Tecnic*\n\n¿Qué pregunta tienes sobre nuestros servicios, tecnología o proyectos?\n\n📋 Puedes hacer hasta 3 preguntas, luego te conectaremos con un especialista.`
+    initMessage: `❓ *Asistente Lemon Digital*\n\n¿Qué pregunta tienes sobre Marketing Digital, SEO, contenidos, chatbots de IA, o nuestros servicios?\n\n📋 Puedes hacer hasta 3 preguntas, luego te conectaremos con un especialista.`
   },
   appointment: {
-    name: 'Agendar Reunion',
-    initMessage: '📅 *Agendar Reunión*\n\nTe ayudaremos a agendar una llamada con nuestro equipo. ¿Cuál es tu nombre?',
+    name: 'Agendar Reunión',
+    initMessage: '📅 *Agendar Auditoría de Marketing Digital*\n\nTe ayudaremos a agendar una llamada con nuestro equipo. ¿Cuál es tu nombre?',
     serviceExamples: [
-      'Sitio web corporativo',
-      'Tienda online',
-      'App móvil iOS/Android',
-      'Sistema de gestión',
-      'Landing page',
-      'Rediseño de sitio',
-      'Consultoría técnica'
+      'Auditoría SEO',
+      'Estrategia de Marketing Digital',
+      'Campaña de Anuncios',
+      'Posicionamiento Google',
+      'Marketing de Contenidos',
+      'Estrategia Lead Magnet',
+      'Email Marketing',
+      'Chatbot de IA 24/7'
     ]
   },
   quotation: {
     name: 'Solicitar Cotización',
-    initMessage: `💰 *Solicitar Cotización*
+    initMessage: `💰 *Cotización Personalizada de Lemon*
 
-Para brindarte la mejor recomendación personalizada, cuéntanos:
+Para darte la mejor propuesta, cuéntanos:
 
-📝 ¿Qué proyecto tienes en mente? Describe:
-• ¿Qué tipo de sitio/app necesitas?
-• ¿Cuál es el objetivo principal?
-• ¿Qué funcionalidades te gustaría incluir?
-• ¿Tienes alguna referencia o ejemplo?
+📝 Sobre tu negocio:
+• ¿Qué tipo de empresa eres? (e-commerce, B2B, servicios, etc)
+• ¿Cuál es tu objetivo principal? (vender, generar leads, posicionarse)
+• ¿Cuáles son tus canales actuales? (web, redes, email)
+• ¿Cuál es tu presupuesto aproximado?
 
-Si no estás seguro, escribe: *"no estoy seguro"* y te ayudaremos.`,
+Si no estás seguro, escribe: *"ayuda"* y te guiaremos.`,
     plans: {
-      emprendedor: {
-        name: 'Plan Emprendedor',
-        ideal: 'Lanzar tu presencia digital',
+      inicio: {
+        name: 'Plan Inicio',
+        ideal: 'Nuevos negocios',
         includes: [
-          'Landing page moderna (1-2 secciones)',
-          'Dominio, hosting y SSL (1 año incluido)',
-          'Diseño responsivo mobile-first',
-          'Formulario de contacto + WhatsApp',
-          'Optimización SEO básica',
-          'Google Analytics configurado',
-          '1 revisión incluida'
+          'Auditoría Digital SEO',
+          'Estrategia de 3 meses',
+          '3 optimizaciones en web',
+          'Reporte mensual',
+          'Consulta inicial gratis',
+          'Seguimiento básico'
         ],
-        price_cop: 400000
+        price_usd: 300
       },
-      profesional: {
-        name: 'Plan Profesional',
-        ideal: 'Empresas que buscan destacar',
+      crece: {
+        name: 'Plan Crece',
+        ideal: 'Medianas empresas',
         includes: [
-          'Sitio completo (3-5 secciones)',
-          'SEO avanzado + analítica (GTM, GA4)',
-          'Diseño personalizado premium',
-          'Correos corporativos incluidos',
-          'Integración con redes sociales',
-          'Blog o noticias opcional',
-          'Mantenimiento mensual opcional',
-          '3 revisiones incluidas'
+          'Auditoría Digital completa',
+          'Estrategia SEO + SEM',
+          'Gestión de Campañas Google Ads',
+          'Marketing de Contenidos (4 posts)',
+          'Reportes semanales',
+          'Consulta mensual con especialista',
+          'Optimización continua'
         ],
-        price_cop: 900000
+        price_usd: 800
       },
-      avanzado: {
-        name: 'Plan Avanzado',
-        ideal: 'E-commerce y aplicaciones web',
+      domina: {
+        name: 'Plan Domina',
+        ideal: 'Empresas establecidas',
         includes: [
-          'E-commerce completo (WooCommerce/React)',
-          'Integraciones con IA y automatizaciones',
-          'Optimización SEO + Core Web Vitals',
-          'Panel de administración personalizado',
-          'Capacitación post-entrega',
-          'Soporte técnico 3 meses',
-          'Migraciones y backups automáticos',
-          'Revisiones ilimitadas en desarrollo'
+          'Estrategia Digital 360°',
+          'SEO + SEM + Lead Magnet',
+          'Campañas en redes sociales',
+          'Marketing de Contenidos (12 posts)',
+          'Email Marketing automatizado',
+          'Consultoría mensual',
+          'Reportes detallados',
+          'Asesor dedicado'
         ],
-        price_cop: 1800000
+        price_usd: 1500
       },
       partner: {
         name: 'Plan Partner',
-        ideal: 'Agencias y desarrollo white-label',
+        ideal: 'Agencias y proyectos complejos',
         includes: [
-          'Desarrollo white-label (tu marca)',
-          'Proyectos escalables y complejos',
-          'Confidencialidad y NDA',
-          'Tarifas preferenciales por volumen',
-          'Soporte técnico dedicado',
-          'Arquitectura empresarial',
+          'Soluciones personalizadas',
+          'Múltiples estrategias simultáneas',
+          'Equipo dedicado',
+          'SLA garantizado',
+          'Soporte 24/7',
+          'Integraciones avanzadas',
+          'Reportes custom',
+          'Precio personalizado'
+        ],
+        price_usd: 'personalizado'
+      }
           'Integraciones avanzadas',
           'Consultoría técnica incluida'
         ],

@@ -13,6 +13,7 @@ import whatsappService from '../whatsappService.js';
 import aiAdapter from '../../adapters/aiAdapter.js';
 import humanHandoffFlow from './humanHandoffFlow.js';
 import escalationService from '../escalationService.js';
+import chatbotOpportunityService from '../chatbotOpportunityService.js';
 import { CONVERSATION_FLOWS } from '../../config/dataServices.js';
 
 const ASSISTANT_STEPS = {
@@ -129,6 +130,18 @@ class AssistantFlow {
     const flowData = sessionManager.getFlowData(userId);
     const remainingQuestions = flowData.maxQuestions - flowData.questionCount;
     
+    // Detectar oportunidad de chatbot (después de 2 preguntas)
+    if (flowData.questionCount >= 2 && !chatbotOpportunityService.alreadySuggested(userId)) {
+      const session = sessionManager.getSession(userId);
+      const opportunity = chatbotOpportunityService.detectChatbotOpportunity(session.conversationHistory);
+      
+      if (opportunity && opportunity.detected) {
+        console.log(`\n🤖 Oportunidad de Chatbot detectada para ${userId}`);
+        await chatbotOpportunityService.sendChatbotSuggestion(userId, opportunity);
+        chatbotOpportunityService.markSuggestionSent(userId);
+      }
+    }
+    
     // Si no hay más preguntas disponibles, solo mostrar opción de escalada
     if (remainingQuestions <= 0) {
       // Registrar escalación automática por límite de preguntas
@@ -142,7 +155,7 @@ class AssistantFlow {
         }
       }
 
-      const escalationMessage = `Has alcanzado el límite de 3 preguntas.\n\n👨‍💻 Conectándote con un especialista de Tech Tecnic que podrá ayudarte mejor...`;
+      const escalationMessage = `Has alcanzado el límite de 3 preguntas.\n\n👨‍💻 Conectándote con un especialista de Lemon Digital que podrá ayudarte mejor...`;
       await whatsappService.sendMessage(userId, escalationMessage);
       sessionManager.clearFlow(userId);
       return humanHandoffFlow.initiate(userId);
@@ -253,7 +266,7 @@ class AssistantFlow {
         }
       }
 
-      const escalationMessage = `Has alcanzado el límite de 3 preguntas.\n\n👨‍💻 Conectándote con un especialista de Tech Tecnic que podrá ayudarte mejor...`;
+      const escalationMessage = `Has alcanzado el límite de 3 preguntas.\n\n👨‍💻 Conectándote con un especialista de Lemon Digital que podrá ayudarte mejor...`;
       await whatsappService.sendMessage(userId, escalationMessage);
       sessionManager.clearFlow(userId);
       return humanHandoffFlow.initiate(userId);

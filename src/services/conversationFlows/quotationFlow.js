@@ -122,17 +122,20 @@ class QuotationFlow {
    * Analizar proyecto con OpenAI
    */
   async analyzeProjectWithAI(projectDescription) {
-    const systemPrompt = `Eres un asesor técnico experto en desarrollo web y móvil de Tech Tecnic.
+    const systemPrompt = `Eres un asesor de marketing digital experto en la agencia Lemon Digital.
 
-Basándote en la descripción del proyecto del cliente, debes:
-1. Analizar qué tipo de solución necesita
-2. Recomendar el plan más adecuado de estos 4:
-   - emprendedor: Landing page, sitio básico (1-2 secciones)
-   - profesional: Sitio completo (3-5 secciones), SEO, blog
-   - avanzado: E-commerce, integraciones IA, apps complejas
-   - partner: Agencias, white-label, proyectos enterprise
+Basándote en la descripción del cliente, debes:
+1. Analizar qué necesita (vender, generar leads, posicionarse)
+2. Recomendar el servicio más adecuado de estos 6:
+   - Auditoría SEO: análisis y optimización básica
+   - Diseño Web: sitios optimizados para conversión
+   - SEO + SEM: posicionamiento + anuncios pagos
+   - Marketing Contenidos: artículos, blogs, contenido estratégico
+   - Lead Magnet + Email: captar y convertir leads
+   - Estrategia 360: solución integral con todos los canales
 
-3. Explicar POR QUÉ ese plan es el mejor para su proyecto
+3. Explicar POR QUÉ ese servicio es el mejor para su negocio
+4. Mencionar que ofrecemos desde nivel Básico hasta Alto`
 4. Listar 3-5 características clave que se incluirían
 
 Responde SOLO en formato JSON:
@@ -244,10 +247,10 @@ Gracias ${clientName || ''}, hemos registrado tu interés en nuestro *${plan.nam
 
 📞 Teléfono: ${userPhone}
 
-👨‍💻 Un especialista de Tech Tecnic te contactará en las próximas 24 horas para:
-• Discutir los detalles de tu proyecto
-• Ajustar la propuesta a tus necesidades exactas
-• Presentarte un presupuesto personalizado
+👨‍💻 Un especialista de Lemon Digital te contactará en las próximas 24 horas para:
+• Discutir tu estrategia de marketing
+• Presentarte un plan personalizado
+• Responder todas tus preguntas
 
 ¿Hay algo más en lo que podamos ayudarte?
         `.trim();
