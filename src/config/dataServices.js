@@ -138,14 +138,10 @@ Si no estás seguro, escribe: *"ayuda"* y te guiaremos.`,
           'Soporte 24/7',
           'Integraciones avanzadas',
           'Reportes custom',
+          'Consultoría técnica incluida',
           'Precio personalizado'
         ],
         price_usd: 'personalizado'
-      }
-          'Integraciones avanzadas',
-          'Consultoría técnica incluida'
-        ],
-        price_cop: 'personalizado'
       }
     }
   }
