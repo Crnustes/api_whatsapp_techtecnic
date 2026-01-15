@@ -135,8 +135,8 @@ Basándote en la descripción del cliente, debes:
    - Estrategia 360: solución integral con todos los canales
 
 3. Explicar POR QUÉ ese servicio es el mejor para su negocio
-4. Mencionar que ofrecemos desde nivel Básico hasta Alto`
-4. Listar 3-5 características clave que se incluirían
+4. Mencionar que ofrecemos desde nivel Básico hasta Alto
+5. Listar 3-5 características clave que se incluirían
 
 Responde SOLO en formato JSON:
 {
