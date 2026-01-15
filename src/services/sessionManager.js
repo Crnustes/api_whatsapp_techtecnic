@@ -1,19 +1,30 @@
 /**
- * Session Manager
- * Maneja el estado conversacional de cada usuario
- * Soporta múltiples flujos simultáneos
+ * Session Manager v2 - Con soporte Firebase + fallback memoria
+ * Maneja estado conversacional con persistencia en Firebase
+ * Si Firebase no está disponible, usa memoria RAM (fallback)
  */
+
+import * as firebaseService from './firebaseService.js';
+import { isFirebaseAvailable } from './firebaseService.js';
 
 class SessionManager {
   constructor() {
-    this.sessions = new Map();
-    this.SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutos de inactividad
-    this.INACTIVITY_WARNING_TIME = 5 * 60 * 1000; // 5 minutos para aviso de inactividad
+    this.sessions = new Map(); // Cache en memoria
+    this.SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutos
+    this.INACTIVITY_WARNING_TIME = 5 * 60 * 1000; // 5 minutos
+    this.useFirebase = isFirebaseAvailable();
+    
+    if (this.useFirebase) {
+      console.log('✅ SessionManager usando Firebase para persistencia');
+    } else {
+      console.log('⚠️ SessionManager usando RAM (sin persistencia)');
+    }
+    
     this.startCleanupInterval();
   }
 
   /**
-   * Obtener o crear sesión para un usuario
+   * Obtener o crear sesión
    */
   getSession(userId) {
     if (!this.sessions.has(userId)) {
@@ -27,11 +38,19 @@ class SessionManager {
         conversationHistory: [],
         metadata: {}
       });
+      
+      // Guardar en Firebase si está disponible
+      if (this.useFirebase) {
+        const session = this.sessions.get(userId);
+        firebaseService.saveSession(userId, session).catch(err => {
+          console.warn('Aviso: No se pudo guardar sesión en Firebase:', err.message);
+        });
+      }
     }
 
     const session = this.sessions.get(userId);
     session.lastActivity = Date.now();
-    session.inactivityWarningShown = false; // Reset cuando hay actividad
+    session.inactivityWarningShown = false;
     return session;
   }
 
@@ -50,6 +69,15 @@ class SessionManager {
     const session = this.getSession(userId);
     session.currentFlow = flowType;
     session.flowData = initialData;
+    session.lastActivity = Date.now();
+    
+    // Guardar en Firebase
+    if (this.useFirebase) {
+      firebaseService.saveSession(userId, session).catch(err => {
+        console.warn('Aviso: No se pudo guardar flujo en Firebase:', err.message);
+      });
+    }
+    
     return session;
   }
 
@@ -62,6 +90,15 @@ class SessionManager {
       ...session.flowData,
       ...updates
     };
+    session.lastActivity = Date.now();
+
+    // Guardar en Firebase
+    if (this.useFirebase) {
+      firebaseService.saveSession(userId, session).catch(err => {
+        console.warn('Aviso: No se pudo actualizar flujo en Firebase:', err.message);
+      });
+    }
+
     return session.flowData;
   }
 
@@ -72,7 +109,7 @@ class SessionManager {
     const session = this.getSession(userId);
     session.conversationHistory.push({
       timestamp: new Date().toISOString(),
-      role, // 'user' | 'assistant'
+      role,
       content,
       metadata
     });
@@ -80,6 +117,15 @@ class SessionManager {
     // Limitar historial a últimos 50 mensajes
     if (session.conversationHistory.length > 50) {
       session.conversationHistory.shift();
+    }
+
+    session.lastActivity = Date.now();
+
+    // Guardar en Firebase
+    if (this.useFirebase) {
+      firebaseService.saveSession(userId, session).catch(err => {
+        console.warn('Aviso: No se pudo guardar historial en Firebase:', err.message);
+      });
     }
   }
 
@@ -99,12 +145,20 @@ class SessionManager {
   }
 
   /**
-   * Limpiar sesión actual (terminar flujo)
+   * Limpiar flujo (pero mantener sesión)
    */
   clearFlow(userId) {
     const session = this.getSession(userId);
     session.currentFlow = null;
     session.flowData = {};
+    session.lastActivity = Date.now();
+
+    // Guardar en Firebase
+    if (this.useFirebase) {
+      firebaseService.saveSession(userId, session).catch(err => {
+        console.warn('Aviso: No se pudo limpiar flujo en Firebase:', err.message);
+      });
+    }
   }
 
   /**
@@ -112,6 +166,12 @@ class SessionManager {
    */
   endSession(userId) {
     this.sessions.delete(userId);
+
+    if (this.useFirebase) {
+      firebaseService.deleteSession(userId).catch(err => {
+        console.warn('Aviso: No se pudo eliminar sesión de Firebase:', err.message);
+      });
+    }
   }
 
   /**
@@ -137,11 +197,11 @@ class SessionManager {
       const now = Date.now();
       for (const [userId, session] of this.sessions.entries()) {
         if (now - session.lastActivity > this.SESSION_TIMEOUT) {
-          console.log(`Sesión expirada para usuario: ${userId}`);
+          console.log(`🧹 Limpiando sesión inactiva: ${userId}`);
           this.sessions.delete(userId);
         }
       }
-    }, 5 * 60 * 1000); // Limpiar cada 5 minutos
+    }, 5 * 60 * 1000);
   }
 
   /**
@@ -150,6 +210,14 @@ class SessionManager {
   setMetadata(userId, key, value) {
     const session = this.getSession(userId);
     session.metadata[key] = value;
+    session.lastActivity = Date.now();
+
+    // Guardar en Firebase
+    if (this.useFirebase) {
+      firebaseService.saveSession(userId, session).catch(err => {
+        console.warn('Aviso: No se pudo guardar metadata en Firebase:', err.message);
+      });
+    }
   }
 
   /**
@@ -162,24 +230,21 @@ class SessionManager {
 
   /**
    * Verificar inactividad y retornar estado
-   * Retorna: null si activa, 'warning' si necesita aviso, 'expired' si expirada
    */
   checkInactivity(userId) {
     const session = this.getSession(userId);
     const now = Date.now();
     const inactiveTime = now - session.lastActivity;
 
-    // Si ha pasado el timeout completo, la sesión expiró
     if (inactiveTime > this.SESSION_TIMEOUT) {
       return 'expired';
     }
 
-    // Si ha pasado 5 minutos y no se mostró el aviso
     if (inactiveTime > this.INACTIVITY_WARNING_TIME && !session.inactivityWarningShown) {
       return 'warning';
     }
 
-    return null; // Sesión activa
+    return null;
   }
 
   /**
@@ -196,6 +261,7 @@ class SessionManager {
   getStats() {
     const stats = {
       totalSessions: this.sessions.size,
+      firebaseEnabled: this.useFirebase,
       sessions: []
     };
 

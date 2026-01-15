@@ -8,6 +8,7 @@ build/
 .vscode/
 *.swp
 *.bak
+src/credentials/firebase-credentials.json
 # Documentación de Bug Fixes y Análisis (personal/local)
 START_HERE.md
 QUICK_TEST.md

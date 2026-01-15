@@ -10,6 +10,7 @@
 
 import sessionManager from '../sessionManager.js';
 import whatsappService from '../whatsappService.js';
+import * as firebaseService from '../firebaseService.js';
 import aiAdapter from '../../adapters/aiAdapter.js';
 import humanHandoffFlow from './humanHandoffFlow.js';
 import escalationService from '../escalationService.js';
@@ -22,15 +23,15 @@ const ASSISTANT_STEPS = {
 };
 
 const FEEDBACK_BUTTONS = [
-  { type: 'reply', reply: { id: 'feedback_yes', title: 'Fue util' } },
-  { type: 'reply', reply: { id: 'feedback_another', title: 'Otra pregunta' } },
-  { type: 'reply', reply: { id: 'feedback_agent', title: 'Hablar agente' } },
+  { type: 'reply', reply: { id: 'feedback_yes', title: '✅ Me sirvió' } },
+  { type: 'reply', reply: { id: 'feedback_another', title: '💬 Otra pregunta' } },
+  { type: 'reply', reply: { id: 'feedback_agent', title: '👤 Hablar con alguien' } },
 ];
 
 const NEXT_STEP_BUTTONS = [
-  { type: 'reply', reply: { id: 'next_appointment', title: 'Agendar llamada' } },
-  { type: 'reply', reply: { id: 'next_portfolio', title: 'Ver portafolio' } },
-  { type: 'reply', reply: { id: 'next_end', title: 'Terminar' } },
+  { type: 'reply', reply: { id: 'next_appointment', title: '📞 Agendar llamada' } },
+  { type: 'reply', reply: { id: 'next_portfolio', title: '🎨 Ver proyectos' } },
+  { type: 'reply', reply: { id: 'next_end', title: '👋 Listo, gracias' } },
 ];
 
 class AssistantFlow {
@@ -81,7 +82,7 @@ class AssistantFlow {
     const config = CONVERSATION_FLOWS.assistant;
     
     if (question.length < 5) {
-      await whatsappService.sendMessage(userId, '❌ Por favor, formula una pregunta más clara.');
+      await whatsappService.sendMessage(userId, '🤔 Mmm... ¿puedes darme más detalles? No entendí bien tu pregunta.');
       return;
     }
 
@@ -90,7 +91,7 @@ class AssistantFlow {
     sessionManager.updateFlowData(userId, flowData);
 
     // Mostrar que estamos procesando
-    await whatsappService.sendMessage(userId, '⏳ Buscando la mejor respuesta...');
+    await whatsappService.sendMessage(userId, '⏳ Dame un sec, checando...');
 
     try {
       // Obtener historial de conversación para contexto
@@ -113,6 +114,21 @@ class AssistantFlow {
 
       // Enviar respuesta
       await whatsappService.sendMessage(userId, response);
+
+      // Persistir conversación en Firebase (asistente)
+      try {
+        const phone = sessionManager.getMetadata(userId, 'phone');
+        if (phone && firebaseService.isFirebaseAvailable()) {
+          await firebaseService.saveConversation({
+            phoneNumber: phone,
+            role: 'assistant',
+            content: response,
+            userId,
+          });
+        }
+      } catch (err) {
+        console.warn('⚠️ No se pudo guardar conversación (assistant):', err?.message || err);
+      }
 
       // Pedir feedback y verificar límite de preguntas
       this.showFeedbackButtons(userId);
@@ -155,14 +171,14 @@ class AssistantFlow {
         }
       }
 
-      const escalationMessage = `Has alcanzado el límite de 3 preguntas.\n\n👨‍💻 Conectándote con un especialista de Lemon Digital que podrá ayudarte mejor...`;
+      const escalationMessage = `Has alcanzado el límite de 3 preguntas.\n\n👨‍💻 Conectándote con un especialista de Tech Tecnic que podrá ayudarte mejor...`;
       await whatsappService.sendMessage(userId, escalationMessage);
       sessionManager.clearFlow(userId);
       return humanHandoffFlow.initiate(userId);
     }
 
     // Si hay preguntas disponibles, mostrar opciones normales
-    const feedbackMessage = '¿Te fue útil la respuesta?';
+    const feedbackMessage = '¿Eso te ayuda? 🤓';
     await whatsappService.sendInteractiveButtons(userId, feedbackMessage, FEEDBACK_BUTTONS);
   }
 
@@ -266,7 +282,7 @@ class AssistantFlow {
         }
       }
 
-      const escalationMessage = `Has alcanzado el límite de 3 preguntas.\n\n👨‍💻 Conectándote con un especialista de Lemon Digital que podrá ayudarte mejor...`;
+      const escalationMessage = `Has alcanzado el límite de 3 preguntas.\n\n👨‍💻 Conectándote con un especialista de Tech Tecnic que podrá ayudarte mejor...`;
       await whatsappService.sendMessage(userId, escalationMessage);
       sessionManager.clearFlow(userId);
       return humanHandoffFlow.initiate(userId);
@@ -277,7 +293,7 @@ class AssistantFlow {
       step: ASSISTANT_STEPS.question
     });
 
-    let message = '✅ Adelante, ¿cuál es tu siguiente pregunta?';
+    let message = '✅ Dale, ¿qué más quieres saber?';
     if (remainingQuestions === 1) {
       message += '\n\n(⚠️ Esta es tu última pregunta disponible)';
     } else {

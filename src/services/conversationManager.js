@@ -12,6 +12,7 @@ import assistantFlow from './conversationFlows/assistantFlow.js';
 import humanHandoffFlow from './conversationFlows/humanHandoffFlow.js';
 import sessionManager from './sessionManager.js';
 import whatsappService from './whatsappService.js';
+import * as firebaseService from './firebaseService.js';
 import { CONVERSATION_FLOWS, KEYWORDS } from '../config/dataServices.js';
 
 const MENU_BUTTONS = CONVERSATION_FLOWS.welcome.buttons;
@@ -37,6 +38,21 @@ class ConversationManager {
       const text = message.text.body;
       console.log(`   Mensaje: "${text}"`);
       sessionManager.addToHistory(userId, 'user', text);
+
+      // Persistir conversación en Firebase (usuario)
+      if (firebaseService && firebaseService.isFirebaseAvailable) {
+        try {
+          const phone = sessionManager.getMetadata(userId, 'phone') || userPhone;
+          await firebaseService.saveConversation({
+            phoneNumber: phone,
+            role: 'user',
+            content: text,
+            userId,
+          });
+        } catch (err) {
+          console.warn('   ⚠️ No se pudo guardar conversación (user):', err?.message || err);
+        }
+      }
     } else if (message.type === 'interactive') {
       const buttonId = message.interactive?.button_reply?.id;
       console.log(`   Botón: ${buttonId}`);
@@ -45,6 +61,15 @@ class ConversationManager {
     // Obtener nombre del cliente
     const clientName = this.getClientName(senderInfo);
     sessionManager.setMetadata(userId, 'clientName', clientName);
+
+    // Actualizar perfil del cliente en Firebase (incrementa interacción y guarda nombre)
+    try {
+      if (userPhone) {
+        await firebaseService.saveClientProfile(userPhone, { firstName: clientName });
+      }
+    } catch (err) {
+      console.warn('   ⚠️ No se pudo actualizar ClientProfile:', err?.message || err);
+    }
 
     // Manejar según tipo de flujo actual
     if (session.currentFlow) {
@@ -66,6 +91,37 @@ class ConversationManager {
     if (message.type === 'text') {
       const text = message.text.body.toLowerCase().trim();
       console.log(`   → Mensaje de texto: "${text}"`);
+
+      // Retomar conversación previa
+      if (text.includes('continuar') || text.includes('retomar')) {
+        console.log('   🎯 Solicitud de retomar conversación');
+        await whatsappService.markAsRead(messageId);
+        const userPhone = sessionManager.getMetadata(userId, 'phone');
+
+        let loaded = 0;
+        if (userPhone) {
+          try {
+            const history = await firebaseService.getUserConversations(userPhone, 8);
+            if (Array.isArray(history) && history.length > 0) {
+              for (const msg of history) {
+                const role = msg?.role || 'user';
+                const content = msg?.content || '';
+                sessionManager.addToHistory(userId, role, content, { source: 'firebase' });
+                loaded++;
+              }
+            }
+          } catch (error) {
+            console.warn(`   ⚠️ No se pudo cargar historial: ${error.message}`);
+          }
+        }
+
+        const resumeText = loaded > 0
+          ? '👌 Listo, retomamos donde lo dejamos. ¿Qué te gustaría preguntar?'
+          : 'No encontré conversación previa, igual te escucho. ¿Qué te gustaría preguntar?';
+        await whatsappService.sendMessage(userId, resumeText);
+
+        return assistantFlow.initiate(userId);
+      }
 
       if (this.isGreeting(text)) {
         // Bienvenida personalizada
@@ -195,24 +251,79 @@ class ConversationManager {
 
       default:
         console.log(`   ⚠️ Opción no reconocida: "${option}"`);
-        await whatsappService.sendMessage(userId, 'Por favor, selecciona una opción válida (1, 2, 3 o 4)');
+        await whatsappService.sendMessage(userId, '🤔 Mmm no entendí. Selecciona una de las opciones de arriba porfa');
         return this.showMainMenu(userId);
     }
   }
 
   /**
    * Enviar bienvenida personalizada
+   * Carga perfil del cliente y sugiere retomar conversación si existe historial
    */
   async sendWelcome(userId, messageId, clientName) {
     try {
       console.log(`   👋 Enviando bienvenida para ${clientName}`);
-      const welcomeText = `¡Hola ${clientName}! 👋\n\nBienvenido a Lemon Digital, agencia de Marketing Digital estratégico en América Latina.\n\n¿En qué podemos ayudarte hoy?`;
+      
+      // Obtener teléfono para buscar ClientProfile
+      const userPhone = sessionManager.getMetadata(userId, 'phone');
+      let greeting = `¡Hola ${clientName}! 👋`;
+      let clientProfile = null;
+      
+      // Intentar cargar ClientProfile de Firebase
+      if (userPhone) {
+        try {
+          clientProfile = await firebaseService.getClientProfile(userPhone);
+          
+          if (clientProfile) {
+            console.log(`   📊 ClientProfile encontrado para ${userPhone}`);
+            console.log(`      Nombre: ${clientProfile.name}, Interacciones: ${clientProfile.interactionCount}`);
+            
+            // Personalizar saludo si es cliente recurrente
+            if (clientProfile.interactionCount > 1) {
+              greeting = `¡Bienvenido de vuelta, ${clientName}! 👋`;
+              console.log(`   ✨ Cliente recurrente detectado (${clientProfile.interactionCount} interacciones)`);
+            }
+            
+            // Guardar perfil en metadata para disponibilidad en flujos
+            sessionManager.setMetadata(userId, 'clientProfile', clientProfile);
+          }
+        } catch (error) {
+          console.warn(`   ⚠️ No se pudo cargar ClientProfile: ${error.message}`);
+          // Continuar sin perfil (fallback)
+        }
+      }
+      
+      const welcomeText = `${greeting}\n\nSoy el asistente de Tech Tecnic. Transformamos ideas en experiencias digitales que generan resultados reales 🚀\n\n¿Qué necesitas?`;
 
       await whatsappService.markAsRead(messageId);
       console.log(`   ✅ Mensaje leído`);
       
       await whatsappService.sendMessage(userId, welcomeText);
       console.log(`   ✅ Texto de bienvenida enviado`);
+
+      // Resumen breve y sugerencia de retomar si hay historial previo en Firebase
+      if (userPhone) {
+        try {
+          const recentConvs = await firebaseService.getUserConversations(userPhone, 5);
+          if (Array.isArray(recentConvs) && recentConvs.length > 0) {
+            // Buscar el último mensaje del asistente
+            const lastAssistant = [...recentConvs].reverse().find(c => (c?.role || '').toLowerCase() === 'assistant');
+            const lastMsg = lastAssistant || recentConvs[recentConvs.length - 1];
+            const preview = (lastMsg?.content || '').replace(/\s+/g, ' ').slice(0, 120);
+
+            const summaryMsg = `🧠 *Resumen rápido:* "${preview}..."`;
+            await whatsappService.sendMessage(userId, summaryMsg);
+
+            const resumeMsg = `Si quieres retomar, escribe *continuar*.`;
+            await whatsappService.sendMessage(userId, resumeMsg);
+
+            sessionManager.setMetadata(userId, 'canResume', true);
+            console.log('   ✅ Resumen y sugerencia de retomar enviados');
+          }
+        } catch (error) {
+          console.warn(`   ⚠️ No se pudo consultar historial previo: ${error.message}`);
+        }
+      }
       
       // Pequeño delay para asegurar que se procesa el mensaje anterior
       console.log(`   ⏳ Esperando 500ms antes de menú...`);
@@ -248,7 +359,7 @@ class ConversationManager {
    * Enviar link de portfolio
    */
   async sendPortfolioLink(userId) {
-    const message = '🎨 *Portfolio Lemon Digital*\n\nMira algunos de nuestros proyectos en América Latina:\nhttps://lemon.digital/portafolio-digital-website/\n\n¿Necesitas una estrategia? Estamos aquí para ayudarte.';
+    const message = '🎨 *Portfolio Tech Tecnic*\n\nMira algunos de nuestros proyectos exitosos:\nhttps://techtecnic.com/proyectos\n\n¿Necesitas algo similar? Estamos aquí para ayudarte.';
     await whatsappService.sendMessage(userId, message);
     return this.showMainMenu(userId);
   }
@@ -257,7 +368,7 @@ class ConversationManager {
    * Cerrar sesión con despedida
    */
   async closeSession(userId) {
-    const farewell = `¡Gracias por confiar en Lemon Digital! 👋\n\nSi necesitas algo más, solo escribe *hola* para volver a comenzar.\n\n¡Que tengas un excelente día!`;
+    const farewell = `¡Gracias por confiar en Tech Tecnic! 👋\n\nSi necesitas algo más, solo escribe *hola* para volver a comenzar.\n\n¡Que tengas un excelente día!`;
     sessionManager.clearFlow(userId);
     await whatsappService.sendMessage(userId, farewell);
   }

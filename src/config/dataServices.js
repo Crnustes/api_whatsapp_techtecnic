@@ -45,9 +45,9 @@ export const DATA_SERVICES = {
 export const CONVERSATION_FLOWS = {
   welcome: {
     name: 'Bienvenida',
-    greeting: '🍋 ¡Hola! Bienvenido a Lemon Digital. Somos una agencia de Marketing Digital que potencia tu negocio. ¿Qué necesitas?',
+    greeting: '👋 ¡Hola! Soy el asistente de Tech Tecnic. Transformamos ideas en experiencias digitales que generan resultados reales 🚀\n\n¿Qué estás buscando hoy?',
     buttons: [
-      { type: 'reply', reply: { id: 'option_audit', title: '📊 Auditoría Gratis' } },
+      { type: 'reply', reply: { id: 'option_audit', title: '🚀 Iniciar Proyecto' } },
       { type: 'reply', reply: { id: 'option_quotation', title: '💰 Cotización' } },
       { type: 'reply', reply: { id: 'option_question', title: '❓ Consulta' } },
     ]
@@ -55,35 +55,25 @@ export const CONVERSATION_FLOWS = {
   assistant: {
     name: 'Asistente',
     maxQuestions: 3,
-    initMessage: `❓ *Asistente Lemon Digital*\n\n¿Qué pregunta tienes sobre Marketing Digital, SEO, contenidos, chatbots de IA, o nuestros servicios?\n\n📋 Puedes hacer hasta 3 preguntas, luego te conectaremos con un especialista.`
+    initMessage: `¡Perfecto! 💬\n\nPregúntame lo que necesites sobre desarrollo web, IA, apps, SEO, o cualquier cosa técnica. Sin filtros, sin límites de temas.\n\nAdelante 👇`
   },
   appointment: {
     name: 'Agendar Reunión',
-    initMessage: '📅 *Agendar Auditoría de Marketing Digital*\n\nTe ayudaremos a agendar una llamada con nuestro equipo. ¿Cuál es tu nombre?',
+    initMessage: '� ¡Cool! Agendemos una llamada\n\nPara coordinar mejor, ¿cuál es tu nombre?',
     serviceExamples: [
-      'Auditoría SEO',
-      'Estrategia de Marketing Digital',
-      'Campaña de Anuncios',
-      'Posicionamiento Google',
-      'Marketing de Contenidos',
-      'Estrategia Lead Magnet',
-      'Email Marketing',
-      'Chatbot de IA 24/7'
+      'Desarrollo Web',
+      'E-commerce',
+      'SEO & Posicionamiento',
+      'Apps Móviles',
+      'IA & Automatización',
+      'Chatbot WhatsApp',
+      'Integraciones',
+      'Mantenimiento Web'
     ]
   },
   quotation: {
     name: 'Solicitar Cotización',
-    initMessage: `💰 *Cotización Personalizada de Lemon*
-
-Para darte la mejor propuesta, cuéntanos:
-
-📝 Sobre tu negocio:
-• ¿Qué tipo de empresa eres? (e-commerce, B2B, servicios, etc)
-• ¿Cuál es tu objetivo principal? (vender, generar leads, posicionarse)
-• ¿Cuáles son tus canales actuales? (web, redes, email)
-• ¿Cuál es tu presupuesto aproximado?
-
-Si no estás seguro, escribe: *"ayuda"* y te guiaremos.`,
+    initMessage: `💰 ¡Perfecto! Vamos a armar tu cotización\n\nCuéntame qué necesitas:\n\n• ¿Qué tipo de proyecto? (web, app, e-commerce, chatbot, etc)\n• ¿Qué problema quieres resolver?\n• ¿Tienes algo ya funcionando o es desde cero?\n• ¿Cuándo lo necesitas?\n\nEscríbeme todo lo que se te ocurra 👇`,
     plans: {
       inicio: {
         name: 'Plan Inicio',

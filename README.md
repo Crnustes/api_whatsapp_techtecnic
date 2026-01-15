@@ -1,13 +1,15 @@
-﻿# Lemon Digital WhatsApp Bot
+﻿# Tech Tecnic WhatsApp Bot 🚀
 
-Bot automatizado de WhatsApp para Lemon Digital que gestiona consultas de clientes, auditorías, cotizaciones y asistencia con OpenAI.
+Bot automatizado de WhatsApp para Tech Tecnic que gestiona consultas de clientes, cotizaciones y asistencia inteligente con OpenAI.
+
+**Tech Tecnic**: Transformamos ideas en experiencias digitales que generan resultados reales.
 
 ## Requisitos
 
 - **Node.js** 18+ (probado en Node 22.x)
 - **WhatsApp Business Cloud API** con token y verify token
 - **Google Service Account** con acceso a Google Sheets
-- **OpenAI API Key** (para asistente)
+- **OpenAI API Key** (para asistente IA)
 
 ## Instalación
 

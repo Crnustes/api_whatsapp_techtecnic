@@ -18,8 +18,8 @@ const QUOTATION_STEPS = {
 };
 
 const CONFIRM_BUTTONS = [
-  { type: 'reply', reply: { id: 'cotiz_yes', title: 'Si, contactar' } },
-  { type: 'reply', reply: { id: 'cotiz_no', title: 'Cancelar' } },
+  { type: 'reply', reply: { id: 'cotiz_yes', title: '✅ Sí, contáctame' } },
+  { type: 'reply', reply: { id: 'cotiz_no', title: '❌ Ahora no' } },
 ];
 
 // Obtener planes de configuración
@@ -90,12 +90,12 @@ class QuotationFlow {
    */
   async handleDescription(userId, description) {
     if (description.length < 10) {
-      await whatsappService.sendMessage(userId, '❌ Por favor, proporciona más detalles sobre tu proyecto (mínimo 10 caracteres).');
+      await whatsappService.sendMessage(userId, '🤔 Mmm dame más detalles porfa. ¿Qué necesitas exactamente?');
       return;
     }
 
     // Mostrar mensaje de análisis
-    await whatsappService.sendMessage(userId, '🤖 Analizando tu proyecto con IA...\n\nUn momento por favor...');
+    await whatsappService.sendMessage(userId, '🤖 Analizando tu proyecto...\n\nDame un sec ⏳');
 
     // Analizar con OpenAI
     const recommendation = await this.analyzeProjectWithAI(description);
@@ -122,26 +122,27 @@ class QuotationFlow {
    * Analizar proyecto con OpenAI
    */
   async analyzeProjectWithAI(projectDescription) {
-    const systemPrompt = `Eres un asesor de marketing digital experto en la agencia Lemon Digital.
+    const systemPrompt = `Eres un asesor de desarrollo web e IA experto en la agencia Tech Tecnic.
 
 Basándote en la descripción del cliente, debes:
-1. Analizar qué necesita (vender, generar leads, posicionarse)
-2. Recomendar el servicio más adecuado de estos 6:
-   - Auditoría SEO: análisis y optimización básica
-   - Diseño Web: sitios optimizados para conversión
-   - SEO + SEM: posicionamiento + anuncios pagos
-   - Marketing Contenidos: artículos, blogs, contenido estratégico
-   - Lead Magnet + Email: captar y convertir leads
-   - Estrategia 360: solución integral con todos los canales
+1. Analizar qué necesita (web, app, e-commerce, chatbot, etc)
+2. Recomendar el servicio más adecuado de estos 7:
+   - Desarrollo Web: sitios modernos y escalables
+   - SEO & Posicionamiento: visibilidad en Google
+   - IA & Automatización: chatbots, automatizaciones
+   - Integraciones: APIs, CRM, sistemas conectados
+   - Mantenimiento Web: soporte continuo
+   - Apps Móviles: iOS + Android
+   - Chatbot WhatsApp con IA: automatización 24/7
 
-3. Explicar POR QUÉ ese servicio es el mejor para su negocio
-4. Mencionar que ofrecemos desde nivel Básico hasta Alto
+3. Explicar POR QUÉ ese servicio es el mejor para su proyecto
+4. Mencionar que tenemos planes: Emprendedor, Profesional y Avanzado
 5. Listar 3-5 características clave que se incluirían
 
 Responde SOLO en formato JSON:
 {
   "planKey": "emprendedor|profesional|avanzado|partner",
-  "analysis": "Explicación de por qué este plan es ideal (2-3 frases)",
+  "analysis": "Explicación de por qué este plan es ideal (2-3 frases, tono juvenil)",
   "features": ["característica 1", "característica 2", "característica 3"]
 }
 
@@ -190,18 +191,18 @@ Ideal para: ${plan.ideal}
 📋 *Por qué este plan:*
 ${recommendation.analysis}
 
-🔧 *Características clave para tu proyecto:*
+🔧 *Lo que te armaríamos:*
 ${features}
 
-💡 *Lo que incluye este plan:*
+✨ *Incluye:*
 ${plan.includes.slice(0, 5).map(i => `• ${i}`).join('\n')}
 
-¿Te gustaría que un especialista te contacte para discutir los detalles y presupuesto?`;
+¿Quieres que te contactemos para afinar detalles y hablarte del presupuesto?`;
 
     await whatsappService.sendMessage(userId, message);
     await whatsappService.sendInteractiveButtons(
       userId,
-      'Confirma tu interes:',
+      '¿Te interesa? 👇',
       CONFIRM_BUTTONS
     );
   }
@@ -241,18 +242,18 @@ ${plan.includes.slice(0, 5).map(i => `• ${i}`).join('\n')}
         await googleSheetsService(quotationData, 'cotizaciones');
 
         const confirmMessage = `
-🎉 *¡Solicitud Recibida!*
+🎉 ¡Listo!
 
-Gracias ${clientName || ''}, hemos registrado tu interés en nuestro *${plan.name}*.
+Gracias ${clientName || ''}, ya registramos tu solicitud para el *${plan.name}*.
 
-📞 Teléfono: ${userPhone}
+📞 ${userPhone}
 
-👨‍💻 Un especialista de Lemon Digital te contactará en las próximas 24 horas para:
-• Discutir tu estrategia de marketing
-• Presentarte un plan personalizado
-• Responder todas tus preguntas
+👨‍💻 Un especialista de Tech Tecnic te contactará en las próximas 24 horas para:
+• Afinar los detalles del proyecto
+• Darte un presupuesto detallado
+• Resolver todas tus dudas
 
-¿Hay algo más en lo que podamos ayudarte?
+¿Necesitas algo más? 💬
         `.trim();
 
         sessionManager.clearFlow(userId);
