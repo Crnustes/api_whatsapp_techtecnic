@@ -10,6 +10,7 @@ import sessionManager from '../sessionManager.js';
 import whatsappService from '../whatsappService.js';
 import aiAdapter from '../../adapters/aiAdapter.js';
 import googleSheetsService from '../googleSheetsService.js';
+import * as firebaseService from '../firebaseService.js';
 import { CONVERSATION_FLOWS } from '../../config/dataServices.js';
 
 const QUOTATION_STEPS = {
@@ -28,16 +29,26 @@ const PLANS = CONVERSATION_FLOWS.quotation.plans;
 class QuotationFlow {
   /**
    * Iniciar flujo de cotización
+   * @param {string} userId - ID del usuario
+   * @param {object} detectedService - Servicio detectado automáticamente (opcional)
    */
-  async initiate(userId) {
+  async initiate(userId, detectedService = null) {
     const config = CONVERSATION_FLOWS.quotation;
     
     sessionManager.setFlow(userId, 'quotation', {
       step: QUOTATION_STEPS.description,
-      data: {}
+      data: {
+        detectedService: detectedService || null
+      }
     });
 
-    await whatsappService.sendMessage(userId, config.initMessage);
+    // Si hay servicio detectado, personalizar mensaje
+    if (detectedService) {
+      const customMessage = `💰 ¡Perfecto! Vamos con tu cotización de *${detectedService.name}*\n\nCuéntame más:\n\n• ¿Qué problema quieres resolver?\n• ¿Tienes algo ya funcionando o es desde cero?\n• ¿Cuándo lo necesitas?\n\nEscríbeme todo lo que se te ocurra 👇`;
+      await whatsappService.sendMessage(userId, customMessage);
+    } else {
+      await whatsappService.sendMessage(userId, config.initMessage);
+    }
   }
 
   /**
@@ -94,6 +105,22 @@ class QuotationFlow {
       return;
     }
 
+    // Persistir descripción en Firebase (usuario)
+    try {
+      const phone = sessionManager.getMetadata(userId, 'phone');
+      if (phone && firebaseService.isFirebaseAvailable()) {
+        await firebaseService.saveConversation({
+          phoneNumber: phone,
+          role: 'user',
+          content: description,
+          userId,
+          flow: 'quotation'
+        });
+      }
+    } catch (err) {
+      console.warn('⚠️ No se pudo guardar conversación (quotation-user):', err?.message || err);
+    }
+
     // Mostrar mensaje de análisis
     await whatsappService.sendMessage(userId, '🤖 Analizando tu proyecto...\n\nDame un sec ⏳');
 
@@ -116,6 +143,23 @@ class QuotationFlow {
 
     // Mostrar recomendación
     await this.showRecommendation(userId, recommendation);
+
+    // Persistir recomendación en Firebase (asistente)
+    try {
+      const phone = sessionManager.getMetadata(userId, 'phone');
+      if (phone && firebaseService.isFirebaseAvailable()) {
+        const summary = `Recomendación: ${recommendation.analysis}`;
+        await firebaseService.saveConversation({
+          phoneNumber: phone,
+          role: 'assistant',
+          content: summary,
+          userId,
+          flow: 'quotation'
+        });
+      }
+    } catch (err) {
+      console.warn('⚠️ No se pudo guardar conversación (quotation-assistant):', err?.message || err);
+    }
   }
 
   /**

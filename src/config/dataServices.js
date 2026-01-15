@@ -143,7 +143,19 @@ export const CONVERSATION_FLOWS = {
 export const KEYWORDS = {
   greetings: ['hola', 'hello', 'hi', 'buenos', 'buenas', 'hey', 'ey', 'que onda'],
   escalation: ['asesor', 'humano', 'agente', 'persona', 'especialista'],
-  menuOptions: ['1', '2', '3', '4']
+  menuOptions: ['1', '2', '3', '4'],
+  
+  // Detección automática de servicios desde mensajes web
+  services: {
+    'desarrollo_web': ['desarrollo web', 'sitio web', 'página web', 'website'],
+    'ecommerce': ['e-commerce', 'ecommerce', 'tienda online', 'tienda virtual'],
+    'chatbot': ['chatbot', 'bot', 'asistente virtual', 'automatización whatsapp'],
+    'app_movil': ['app móvil', 'aplicación móvil', 'app android', 'app ios'],
+    'integraciones': ['integrar', 'integraciones', 'integración', 'conectar sistemas', 'api'],
+    'seo': ['seo', 'posicionamiento', 'posicionamiento web', 'google'],
+    'ia': ['inteligencia artificial', 'ia', 'machine learning', 'ai'],
+    'mantenimiento': ['mantenimiento web', 'soporte web', 'actualización web']
+  }
 };
 
 /**

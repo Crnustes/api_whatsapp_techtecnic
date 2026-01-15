@@ -9,6 +9,7 @@
 import sessionManager from '../sessionManager.js';
 import whatsappService from '../whatsappService.js';
 import googleSheetsService from '../googleSheetsService.js';
+import * as firebaseService from '../firebaseService.js';
 import { validateEmail, normalizePhone, formatDateTime } from '../../utils/validators.js';
 import { CONVERSATION_FLOWS } from '../../config/dataServices.js';
 
@@ -32,18 +33,28 @@ const CONFIRM_BUTTONS = [
 class AppointmentFlow {
   /**
    * Iniciar flujo de agendamiento
+   * @param {string} userId - ID del usuario
+   * @param {string} userPhone - Teléfono del usuario
+   * @param {object} detectedService - Servicio detectado automáticamente (opcional)
    */
-  async initiate(userId, userPhone = '') {
+  async initiate(userId, userPhone = '', detectedService = null) {
     const config = CONVERSATION_FLOWS.appointment;
     
     sessionManager.setFlow(userId, 'appointment', {
       step: APPOINTMENT_STEPS.name,
       data: {
-        phone: userPhone || userId // Usar teléfono de WhatsApp automáticamente
+        phone: userPhone || userId,
+        detectedService: detectedService || null
       }
     });
 
-    await whatsappService.sendMessage(userId, config.initMessage);
+    // Si hay servicio detectado, personalizar mensaje
+    if (detectedService) {
+      const customMessage = `📞 ¡Cool! Agendemos una llamada para *${detectedService.name}*\n\nPara coordinar mejor, ¿cuál es tu nombre?`;
+      await whatsappService.sendMessage(userId, customMessage);
+    } else {
+      await whatsappService.sendMessage(userId, config.initMessage);
+    }
   }
 
   /**
@@ -110,6 +121,22 @@ class AppointmentFlow {
     if (name.length < 2) {
       await whatsappService.sendMessage(userId, '❌ Por favor, ingresa un nombre válido.');
       return;
+    }
+
+    // Persistir nombre en Firebase
+    try {
+      const phone = sessionManager.getMetadata(userId, 'phone');
+      if (phone && firebaseService.isFirebaseAvailable()) {
+        await firebaseService.saveConversation({
+          phoneNumber: phone,
+          role: 'user',
+          content: `Nombre: ${name}`,
+          userId,
+          flow: 'appointment'
+        });
+      }
+    } catch (err) {
+      console.warn('⚠️ No se pudo guardar conversación (appointment-name):', err?.message || err);
     }
 
     sessionManager.updateFlowData(userId, {

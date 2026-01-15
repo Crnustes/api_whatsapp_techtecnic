@@ -124,7 +124,25 @@ class ConversationManager {
       }
 
       if (this.isGreeting(text)) {
-        // Bienvenida personalizada
+        // Detectar servicio mencionado en el saludo inicial
+        const detectedService = this.detectService(text);
+        
+        if (detectedService) {
+          console.log(`   🎯 Servicio detectado en saludo: ${detectedService.name}`);
+          await whatsappService.markAsRead(messageId);
+          
+          // Guardar servicio detectado en metadata
+          sessionManager.setMetadata(userId, 'detectedService', detectedService);
+          
+          // Saludo rápido + iniciar cotización con contexto
+          const quickGreeting = `¡Hola ${clientName}! 👋 Vi que te interesa *${detectedService.name}*. ¡Perfecto!\n\nCuéntame más detalles de tu proyecto para armar tu cotización 💰`;
+          await whatsappService.sendMessage(userId, quickGreeting);
+          
+          // Iniciar flujo de cotización con servicio pre-cargado
+          return quotationFlow.initiate(userId, detectedService);
+        }
+        
+        // Bienvenida personalizada normal
         console.log(`   🎯 Es un saludo → enviando bienvenida`);
         return this.sendWelcome(userId, messageId, clientName);
       }
@@ -394,6 +412,44 @@ class ConversationManager {
   matchesKeywords(text, keywords) {
     if (!Array.isArray(keywords)) return false;
     return keywords.some(keyword => text.includes(keyword));
+  }
+
+  /**
+   * Detectar servicio mencionado en el mensaje
+   */
+  detectService(text) {
+    const services = KEYWORDS.services;
+    
+    for (const [serviceKey, keywords] of Object.entries(services)) {
+      for (const keyword of keywords) {
+        if (text.includes(keyword)) {
+          return {
+            key: serviceKey,
+            name: this.getServiceDisplayName(serviceKey),
+            keywords: keyword
+          };
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Obtener nombre display del servicio
+   */
+  getServiceDisplayName(serviceKey) {
+    const names = {
+      'desarrollo_web': 'Desarrollo Web',
+      'ecommerce': 'E-commerce',
+      'chatbot': 'Chatbot WhatsApp',
+      'app_movil': 'App Móvil',
+      'integraciones': 'Integraciones & APIs',
+      'seo': 'SEO & Posicionamiento',
+      'ia': 'Inteligencia Artificial',
+      'mantenimiento': 'Mantenimiento Web'
+    };
+    return names[serviceKey] || serviceKey;
   }
 
   /**
