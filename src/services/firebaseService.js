@@ -174,10 +174,6 @@ export const saveConversation = async (conversationData, traceId = null) => {
     return false;
   }
 };
-    console.error('Error guardando conversación:', error);
-    return false;
-  }
-};
 
 /**
  * Obtener últimas conversaciones de un usuario
