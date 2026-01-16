@@ -1,0 +1,325 @@
+{
+  "tenantId": "techtecnic",
+  "brand": {
+    "name": "Tech Tecnic",
+    "legalName": "Tech Tecnic SAS",
+    "website": "https://techtecnic.com",
+    "logo": "https://techtecnic.com/logo.png",
+    "primaryColor": "#00A3CE",
+    "tone": "moderno_profesional",
+    "language": "es"
+  },
+
+  "channels": {
+    "whatsapp": {
+      "enabled": true,
+      "phoneNumber": "573337151064",
+      "businessName": "Tech Tecnic",
+      "businessAccountId": "BUSINESS_ACCOUNT_TECHTECNIC",
+      "phoneNumberId": "PHONE_TECHTECNIC",
+      "apiToken": "sk-techtecnic-...",
+      "webhookToken": "verify-token-techtecnic"
+    },
+    "webchat": {
+      "enabled": false
+    },
+    "instagram": {
+      "enabled": false
+    }
+  },
+
+  "openai": {
+    "apiKey": "sk-techtecnic-openai-...",
+    "model": "gpt-4",
+    "temperature": 0.6,
+    "maxTokens": 1500
+  },
+
+  "firebase": {
+    "projectId": "techtecnic-firebase",
+    "databaseURL": "https://techtecnic-firebase.firebaseio.com",
+    "credentialsPath": "src/credentials/techtecnic-firebase-key.json",
+    "namespace": "techtecnic"
+  },
+
+  "bot": {
+    "language": "es",
+    "timezone": "America/Bogota",
+    "responseTime": 500,
+    "maxRetries": 2,
+    "enableTracing": true,
+    "enableMemory": true
+  },
+
+  "enabledFlows": ["appointment", "quotation", "assistant", "sales", "humanHandoff"],
+
+  "messages": {
+    "welcome": "¡Hola! 👋 Soy el asistente de *Tech Tecnic*. Transformamos ideas en experiencias digitales que generan resultados reales.\n\n¿Cómo puedo ayudarte hoy?",
+    "errorGeneric": "Disculpa, hubo un problema. Por favor, intenta nuevamente.",
+    "errorRateLimit": "Estamos recibiendo muchas solicitudes. Por favor, intenta en unos minutos.",
+    "handoffReason": "Te conectaré con un especialista de nuestro equipo."
+  },
+
+  "features": {
+    "quotationEngine": true,
+    "appointmentBooking": true,
+    "googleSheetIntegration": true,
+    "memorySystem": true,
+    "memoryPersistent": true,
+    "conversationSummary": true,
+    "quotationAI": true,
+    "opportunityDetection": true,
+    "leadScoring": true,
+    "salesAgent": true,
+    "followUps": true,
+    "humanHandoff": true,
+    "dashboard": true
+  },
+
+  "limits": {
+    "messagesPerHour": 100,
+    "maxConversationLength": 500,
+    "quotationExpiryDays": 7,
+    "assistantQuestions": 3,
+    "followUpsMax": 3,
+    "sessionTimeoutMinutes": 15
+  },
+
+  "services": [
+    {
+      "key": "desarrollo_web",
+      "name": "Desarrollo Web",
+      "keywords": ["web", "pagina", "página", "sitio", "website", "landing"],
+      "minPrice": 600,
+      "maxPrice": 3000,
+      "currency": "USD",
+      "description": "Diseño y desarrollo de sitios web modernos y optimizados.",
+      "deliveryDays": 15
+    },
+    {
+      "key": "chatbot",
+      "name": "Chatbots & Automatización",
+      "keywords": ["bot", "whatsapp", "automatizacion", "automatización", "asistente", "ia", "chatbot"],
+      "minPrice": 500,
+      "maxPrice": 5000,
+      "currency": "USD",
+      "description": "Automatizamos la atención y ventas con IA.",
+      "deliveryDays": 10
+    },
+    {
+      "key": "integraciones",
+      "name": "Integraciones & APIs",
+      "keywords": ["api", "integrar", "conectar", "crm", "integración", "sistema"],
+      "minPrice": 800,
+      "maxPrice": 10000,
+      "currency": "USD",
+      "description": "Conectamos tus sistemas para que trabajen juntos.",
+      "deliveryDays": 20
+    },
+    {
+      "key": "ecommerce",
+      "name": "E-commerce",
+      "keywords": ["tienda", "ecommerce", "vender", "online", "productos", "carrito"],
+      "minPrice": 1200,
+      "maxPrice": 5000,
+      "currency": "USD",
+      "description": "Plataformas completas para vender online.",
+      "deliveryDays": 30
+    },
+    {
+      "key": "apps_moviles",
+      "name": "Apps Móviles",
+      "keywords": ["app", "movil", "móvil", "aplicacion", "aplicación", "ios", "android"],
+      "minPrice": 2000,
+      "maxPrice": 15000,
+      "currency": "USD",
+      "description": "Aplicaciones nativas o híbridas para iOS y Android.",
+      "deliveryDays": 45
+    }
+  ],
+
+  "sales": {
+    "leadScoring": {
+      "enabled": true,
+      "rules": [
+        {
+          "signal": "service_high_value",
+          "points": 30,
+          "description": "Servicio de alto valor (apps, integraciones)"
+        },
+        {
+          "signal": "mentions_budget",
+          "points": 25,
+          "description": "Menciona presupuesto específico"
+        },
+        {
+          "signal": "urgency",
+          "points": 20,
+          "description": "Palabras de urgencia (urgente, ya, ahora)"
+        },
+        {
+          "signal": "recurrent_user",
+          "points": 10,
+          "description": "Usuario recurrente con historial"
+        },
+        {
+          "signal": "asks_pricing",
+          "points": 15,
+          "description": "Pregunta por precios o cotización"
+        },
+        {
+          "signal": "business_client",
+          "points": 10,
+          "description": "Cliente empresarial (gerente, director, CEO)"
+        }
+      ],
+      "thresholds": {
+        "nurture": 0,
+        "qualify": 40,
+        "schedule": 70,
+        "handoff": 90
+      }
+    },
+
+    "playbooks": {
+      "nurture": {
+        "goal": "educar y generar interés",
+        "cta": "¿Te muestro ejemplos de lo que hacemos?",
+        "maxQuestions": 2
+      },
+      "qualify": {
+        "goal": "obtener datos clave (timeline, budget, autoridad)",
+        "cta": "¿Te parece si lo revisamos en una llamada?",
+        "maxQuestions": 3
+      },
+      "schedule": {
+        "goal": "agendar reunión o demo",
+        "cta": "¿Agendamos una videollamada para revisar tu proyecto?",
+        "maxQuestions": 1
+      },
+      "hot": {
+        "goal": "cerrar o transferir a humano",
+        "cta": "Te conecto ahora con un especialista.",
+        "maxQuestions": 0
+      }
+    }
+  },
+
+  "flows": {
+    "appointment": {
+      "enabled": true,
+      "steps": ["name", "email", "service", "description", "datetime", "confirm"],
+      "calendarUrl": "https://calendar.google.com/techtecnic"
+    },
+    "quotation": {
+      "enabled": true,
+      "steps": ["description", "analysis", "proposal", "accept"],
+      "aiEnabled": true
+    },
+    "assistant": {
+      "enabled": true,
+      "maxQuestions": 3,
+      "model": "gpt-4"
+    },
+    "sales": {
+      "enabled": true,
+      "useLeadScoring": true
+    },
+    "humanHandoff": {
+      "enabled": true,
+      "notifyTeam": true
+    }
+  },
+
+  "followUps": {
+    "enabled": true,
+    "maxFollowUps": 3,
+    "schedule": [
+      {
+        "afterHours": 2,
+        "message": "¡Hola! ¿Quieres que te envíe una propuesta rápida sobre lo que conversamos? 📄",
+        "condition": "no_response"
+      },
+      {
+        "afterHours": 24,
+        "message": "👋 Tenemos clientes que lograron resultados similares a lo que buscas. ¿Te interesa ver casos de éxito?",
+        "condition": "no_response"
+      },
+      {
+        "afterHours": 72,
+        "message": "Voy a cerrar tu solicitud si no recibo respuesta. ¿Deseas que continuemos? 🤔",
+        "condition": "no_response"
+      }
+    ]
+  },
+
+  "handoff": {
+    "enabled": true,
+    "criteria": ["score_hot", "user_requests_human", "assistant_limit_reached", "urgent_keyword"],
+    "notificationChannels": ["email", "slack"],
+    "teamEmail": "equipo@techtecnic.com",
+    "slackWebhook": "https://hooks.slack.com/services/...",
+    "priorityMap": {
+      "hot": "Alta",
+      "schedule": "Alta",
+      "qualify": "Media",
+      "nurture": "Baja"
+    },
+    "sheet": "escalados"
+  },
+
+  "integrations": {
+    "firebase": {
+      "enabled": true,
+      "namespace": "techtecnic"
+    },
+    "googleSheets": {
+      "enabled": true,
+      "spreadsheetId": "1EE1ai1QrBXI0SZ3DdvrZrrn3U6DkAD9ILKzTMWezSnM",
+      "credentialsPath": "src/credentials/credentials.json",
+      "tabs": {
+        "reservas": "reservas",
+        "cotizaciones": "cotizaciones",
+        "escalados": "escalados",
+        "conversaciones": "conversaciones",
+        "leads": "leads"
+      }
+    },
+    "crm": {
+      "enabled": false,
+      "provider": "hubspot",
+      "apiKey": ""
+    },
+    "analytics": {
+      "enabled": false,
+      "provider": "google_analytics",
+      "trackingId": ""
+    }
+  },
+
+  "prompts": {
+    "assistant": "Eres el asistente oficial de Tech Tecnic, una empresa que transforma ideas en experiencias digitales. Responde de manera clara, corta (max 3 líneas) y orientada a convertir. Sé profesional pero cercano. Enfócate en los beneficios y resultados. Si el usuario muestra interés, ofrece agendar una llamada o enviar propuesta.",
+    
+    "quotation": "Analiza el proyecto del cliente y recomienda el mejor plan según los servicios que ofrece Tech Tecnic y el presupuesto mencionado. Sé específico con entregables, timeline y precio. Incluye beneficios claros. Formato:\n1. Resumen del proyecto\n2. Servicios recomendados\n3. Inversión estimada\n4. Timeline de entrega\n5. Próximo paso (agendar llamada)",
+    
+    "summary": "Resume la conversación extrayendo SOLO hechos confirmados del cliente:\n- Necesidad/Proyecto\n- Presupuesto mencionado (si aplica)\n- Timeline/Urgencia\n- Tipo de cliente (empresa/persona)\n- Autoridad (decision maker / influencer)\n- Servicios de interés\n- Siguiente acción\n\nNo inventes información. Si algo no se mencionó, indica 'No especificado'.",
+    
+    "leadQualification": "Basándote en esta conversación, califica al lead según:\n1. Fit del servicio (¿necesita lo que ofrecemos?)\n2. Budget awareness (¿mencionó presupuesto?)\n3. Timeline (¿cuándo lo necesita?)\n4. Authority (¿toma decisiones?)\n\nConcluye con: NURTURE, QUALIFY, HOT y explica por qué.",
+    
+    "salesResponse": "Eres un agente de ventas consultivo de Tech Tecnic. Genera una respuesta corta (max 2 líneas) que:\n1. Valide la necesidad del cliente\n2. Muestre comprensión\n3. Ofrezca un próximo paso claro\n\nNo uses frases genéricas. Sé específico según el contexto.",
+    
+    "opportunityDetection": "Analiza si este mensaje indica una oportunidad de venta:\n- Keywords comerciales (precio, cotización, cuánto, necesito)\n- Urgencia expresada\n- Autoridad del usuario\n- Presupuesto mencionado\n\nResponde: SI/NO y confidence (0-1)"
+  },
+
+  "escalation": {
+    "enabled": true,
+    "conditions": {
+      "assistantLimitReached": true,
+      "userRequestsHuman": true,
+      "highValueLead": true,
+      "urgentKeywords": true
+    },
+    "defaultRoute": "whatsapp_group",
+    "notificationDelay": 0
+  }
+}

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Dashboard - Tech Tecnic</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      color: #00A3CE;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .card h2 {
+      color: #333;
+      font-size: 20px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #00A3CE;
+      padding-bottom: 10px;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .info-item {
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    
+    .info-item label {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+    }
+    
+    .info-item .value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .message {
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .message.user {
+      background: #e0f2fe;
+      border-left: 3px solid #0ea5e9;
+    }
+    
+    .message.assistant {
+      background: #f3f4f6;
+      border-left: 3px solid #6b7280;
+    }
+    
+    .message .meta {
+      font-size: 11px;
+      color: #666;
+      margin-top: 5px;
+    }
+    
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .status-badge.active { background: #d1fae5; color: #065f46; }
+    .status-badge.pending { background: #fef3c7; color: #92400e; }
+    .status-badge.completed { background: #dbeafe; color: #1e40af; }
+    
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #666;
+    }
+    
+    .refresh-btn {
+      background: #00A3CE;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      float: right;
+      transition: background 0.2s;
+    }
+    
+    .refresh-btn:hover {
+      background: #0086a8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>👋 Mi Dashboard</h1>
+      <p>Historial de conversaciones y servicios con Tech Tecnic</p>
+      <button class="refresh-btn" onclick="loadMetrics()">🔄 Actualizar</button>
+    </div>
+    
+    <div id="content">
+      <div class="loading">
+        <h3>Cargando información...</h3>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const PHONE = '{{PHONE}}';
+    const TENANT = '{{TENANT}}';
+    
+    async function loadMetrics() {
+      try {
+        const response = await fetch(`/dashboard/api/client/${PHONE}?tenant=${TENANT}`);
+        const data = await response.json();
+        
+        renderDashboard(data);
+      } catch (error) {
+        console.error('Error loading metrics:', error);
+        document.getElementById('content').innerHTML = '<div class="loading"><h3>❌ Error cargando información</h3></div>';
+      }
+    }
+    
+    function renderDashboard(data) {
+      const html = `
+        <!-- Client Info -->
+        <div class="card">
+          <h2>📋 Mi Información</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Nombre</label>
+              <div class="value">${data.client.name || 'Cliente'}</div>
+            </div>
+            <div class="info-item">
+              <label>Teléfono</label>
+              <div class="value">${data.client.phone}</div>
+            </div>
+            <div class="info-item">
+              <label>Interacciones</label>
+              <div class="value">${data.client.totalInteractions}</div>
+            </div>
+            <div class="info-item">
+              <label>Estado</label>
+              <div class="value"><span class="status-badge active">Activo</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Conversations -->
+        <div class="card">
+          <h2>💬 Últimas Conversaciones (${data.conversations.total})</h2>
+          ${data.conversations.lastMessages.length > 0 ? 
+            data.conversations.lastMessages.map(msg => `
+              <div class="message ${msg.role}">
+                <strong>${msg.role === 'user' ? 'Tú' : 'Tech Tecnic'}</strong>
+                <p>${msg.content || '...'}</p>
+                <div class="meta">${new Date(msg.timestamp).toLocaleString('es-ES')}</div>
+              </div>
+            `).join('') :
+            '<div class="empty">No hay conversaciones recientes</div>'
+          }
+        </div>
+        
+        <!-- Appointments -->
+        <div class="card">
+          <h2>📅 Mis Citas (${data.appointments.total})</h2>
+          ${data.appointments.upcoming.length > 0 ?
+            '<p>Próximas citas aparecerán aquí</p>' :
+            '<div class="empty">No tienes citas agendadas</div>'
+          }
+        </div>
+        
+        <!-- Quotations -->
+        <div class="card">
+          <h2>💰 Mis Cotizaciones (${data.quotations.total})</h2>
+          ${data.quotations.pending.length > 0 ?
+            '<p>Cotizaciones pendientes aparecerán aquí</p>' :
+            '<div class="empty">No tienes cotizaciones activas</div>'
+          }
+        </div>
+        
+        <!-- Lead Info -->
+        ${data.lead.score > 0 ? `
+          <div class="card">
+            <h2>📊 Tu Perfil</h2>
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Estado</label>
+                <div class="value">${data.lead.state}</div>
+              </div>
+              <div class="info-item">
+                <label>Score</label>
+                <div class="value">${data.lead.score}</div>
+              </div>
+            </div>
+          </div>
+        ` : ''}
+        
+        <div class="card" style="text-align: center; background: #f0fdfa;">
+          <p>💬 ¿Necesitas ayuda? Escríbenos por WhatsApp</p>
+          <p style="margin-top: 10px; color: #666;">+57 333 7151064</p>
+        </div>
+      `;
+      
+      document.getElementById('content').innerHTML = html;
+    }
+    
+    // Cargar al iniciar
+    loadMetrics();
+  </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+{
+  "tenantId": "tenant-001",
+  "name": "Empresa A",
+  "whatsapp": {
+    "businessAccountId": "BUSINESS_ACCOUNT_001",
+    "phoneNumberId": "PHONE_001",
+    "apiToken": "sk-tenant-001-...",
+    "webhookToken": "verify-token-001"
+  },
+  "openai": {
+    "apiKey": "sk-empresa-a-...",
+    "model": "gpt-4",
+    "temperature": 0.6,
+    "maxTokens": 1500
+  },
+  "firebase": {
+    "projectId": "empresa-a-firebase",
+    "databaseURL": "https://empresa-a-firebase.firebaseio.com",
+    "credentialsPath": "src/credentials/empresa-a-firebase-key.json"
+  },
+  "googleSheets": {
+    "enabled": true,
+    "spreadsheetId": "1A2B3C4D5E...",
+    "credentialsPath": "src/credentials/empresa-a-sheets.json"
+  },
+  "bot": {
+    "language": "es",
+    "timezone": "Europe/Madrid",
+    "responseTime": 500,
+    "maxRetries": 2,
+    "enableTracing": true,
+    "enableMemory": true
+  },
+  "enabledFlows": ["appointment", "quotation", "assistant", "sales", "humanHandoff"],
+  "messages": {
+    "welcome": "¡Bienvenido a Empresa A! Soy su asistente virtual.",
+    "errorGeneric": "Disculpe, hubo un problema. Intente nuevamente.",
+    "errorRateLimit": "Estamos recibiendo muchas solicitudes. Por favor, intente después.",
+    "handoffReason": "Le transferiremos con un representante."
+  },
+  "features": {
+    "quotationEngine": true,
+    "appointmentBooking": true,
+    "googleSheetIntegration": true,
+    "memorySystem": true,
+    "memoryPersistent": true,
+    "quotationAI": true,
+    "opportunityDetection": true,
+    "salesAgent": true,
+    "dashboard": true
+  },
+  "limits": {
+    "messagesPerHour": 200,
+    "maxConversationLength": 1000,
+    "quotationExpiryDays": 14
+  },
+  "escalation": {
+    "enabledTeams": ["sales", "support", "premium"],
+    "defaultTeam": "sales",
+    "routingRules": {
+      "urgent": "premium",
+      "complaint": "support",
+      "enterprise": "premium"
+    }
+  }
+}

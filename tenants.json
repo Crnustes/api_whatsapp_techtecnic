@@ -1,0 +1,14 @@
+{
+  "_comment": "Mapeo de números WhatsApp Business API → tenantId",
+  "_comment2": "Esto permite resolver el tenant basado en el número telefónico que recibe el mensaje",
+  "_comment3": "Estrategia PRIMARY para multi-tenant en WhatsApp Business",
+  
+  "573337151064": "techtecnic",
+  "+573337151064": "techtecnic",
+  "+34123456789": "tenant-001",
+  "+34987654321": "tenant-001",
+  "+1234567890": "tenant-002",
+  "+55987654321": "tenant-002",
+  
+  "default": "techtecnic"
+}

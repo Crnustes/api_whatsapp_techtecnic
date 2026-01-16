@@ -1,0 +1,65 @@
+{
+  "tenantId": "default",
+  "name": "Default Tenant",
+  "whatsapp": {
+    "businessAccountId": "YOUR_BUSINESS_ACCOUNT_ID",
+    "phoneNumberId": "YOUR_PHONE_NUMBER_ID",
+    "apiToken": "YOUR_WHATSAPP_API_TOKEN",
+    "webhookToken": "YOUR_WEBHOOK_VERIFY_TOKEN"
+  },
+  "openai": {
+    "apiKey": "sk-...",
+    "model": "gpt-4",
+    "temperature": 0.7,
+    "maxTokens": 1000
+  },
+  "firebase": {
+    "projectId": "techtecnic-bot",
+    "databaseURL": "https://techtecnic-bot.firebaseio.com",
+    "credentialsPath": "src/credentials/techtecnic-bot-firebase-adminsdk-fbsvc-302d95c214.json"
+  },
+  "googleSheets": {
+    "enabled": false,
+    "spreadsheetId": null,
+    "credentialsPath": null
+  },
+  "bot": {
+    "language": "es",
+    "timezone": "Europe/Madrid",
+    "responseTime": 0,
+    "maxRetries": 3,
+    "enableTracing": true,
+    "enableMemory": true
+  },
+  "enabledFlows": ["appointment", "quotation", "assistant", "humanHandoff"],
+  "messages": {
+    "welcome": "¡Hola! Soy Tech Tecnic Bot. ¿Cómo te puedo ayudar?",
+    "errorGeneric": "Disculpa, hubo un error. Reintentar en unos segundos.",
+    "errorRateLimit": "Estoy recibiendo muchos mensajes. Intenta en 1 minuto.",
+    "handoffReason": "Te estoy conectando con un agente. Aguarda un momento."
+  },
+  "features": {
+    "quotationEngine": true,
+    "appointmentBooking": true,
+    "googleSheetIntegration": false,
+    "memorySystem": true,
+    "memoryPersistent": false,
+    "quotationAI": false,
+    "opportunityDetection": false,
+    "salesAgent": false,
+    "dashboard": false
+  },
+  "limits": {
+    "messagesPerHour": 100,
+    "maxConversationLength": 500,
+    "quotationExpiryDays": 7
+  },
+  "escalation": {
+    "enabledTeams": ["sales", "support"],
+    "defaultTeam": "sales",
+    "routingRules": {
+      "urgent": "vip_team",
+      "complaint": "support"
+    }
+  }
+}

@@ -6,6 +6,7 @@
 
 import whatsappService from './whatsappService.js';
 import sessionManager from './sessionManager.js';
+import { isFeatureEnabled } from '../utils/featureGating.js';
 
 class ChatbotOpportunityService {
   /**
@@ -23,8 +24,14 @@ class ChatbotOpportunityService {
 
   /**
    * Detectar si la conversación tiene triggers de chatbot
+   * GATED: opportunityDetection controla si esta detección está activa
    */
-  detectChatbotOpportunity(conversationHistory) {
+  detectChatbotOpportunity(conversationHistory, req = null) {
+    // GATING: Verificar si opportunityDetection está habilitado
+    if (req && !isFeatureEnabled(req, 'opportunityDetection')) {
+      return null; // Feature deshabilitado, no detectar
+    }
+
     if (!conversationHistory || conversationHistory.length === 0) {
       return null;
     }
@@ -53,9 +60,10 @@ class ChatbotOpportunityService {
     if (totalTriggers >= 2) {
       return {
         detected: true,
-        confidence: Math.min(totalTriggers * 20, 100), // Porcentaje de confianza
+        confidence: Math.min(totalTriggers * 20, 100),
         triggers: triggersFound,
-        category: this.determinePrimaryCategory(triggersFound)
+        category: this.determinePrimaryCategory(triggersFound),
+        feature_enabled: true
       };
     }
 

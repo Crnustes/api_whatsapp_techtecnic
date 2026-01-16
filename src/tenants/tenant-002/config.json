@@ -1,0 +1,62 @@
+{
+  "tenantId": "tenant-002",
+  "name": "Empresa B",
+  "whatsapp": {
+    "businessAccountId": "BUSINESS_ACCOUNT_002",
+    "phoneNumberId": "PHONE_002",
+    "apiToken": "sk-tenant-002-...",
+    "webhookToken": "verify-token-002"
+  },
+  "openai": {
+    "apiKey": "sk-empresa-b-...",
+    "model": "gpt-3.5-turbo",
+    "temperature": 0.8,
+    "maxTokens": 800
+  },
+  "firebase": {
+    "projectId": "empresa-b-firebase",
+    "databaseURL": "https://empresa-b-firebase.firebaseio.com",
+    "credentialsPath": "src/credentials/empresa-b-firebase-key.json"
+  },
+  "googleSheets": {
+    "enabled": false,
+    "spreadsheetId": null,
+    "credentialsPath": null
+  },
+  "bot": {
+    "language": "es",
+    "timezone": "America/Mexico_City",
+    "responseTime": 0,
+    "maxRetries": 3,
+    "enableTracing": false,
+    "enableMemory": false
+  },
+  "enabledFlows": ["quotation", "assistant"],
+  "messages": {
+    "welcome": "Hola, bienvenido a Empresa B.",
+    "errorGeneric": "Error en la solicitud.",
+    "errorRateLimit": "Muchos mensajes, intenta después.",
+    "handoffReason": "Conectando con agente..."
+  },
+  "features": {
+    "quotationEngine": true,
+    "appointmentBooking": false,
+    "googleSheetIntegration": false,
+    "memorySystem": false,
+    "memoryPersistent": false,
+    "quotationAI": false,
+    "opportunityDetection": false,
+    "salesAgent": false,
+    "dashboard": false
+  },
+  "limits": {
+    "messagesPerHour": 50,
+    "maxConversationLength": 100,
+    "quotationExpiryDays": 3
+  },
+  "escalation": {
+    "enabledTeams": ["sales"],
+    "defaultTeam": "sales",
+    "routingRules": {}
+  }
+}

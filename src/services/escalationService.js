@@ -5,24 +5,32 @@
  * Condiciones de escalación:
  * - Más de 3 interacciones (mensajes) en la conversación
  * - Usuario está haciendo preguntas sobre proyectos/servicios a la IA
+ * GATED: salesAgent
  */
 
 import sessionManager from './sessionManager.js';
 import googleSheetsService from './googleSheetsService.js';
 import { getAuthClient, addRowToSheet } from './googleSheetsService.js';
+import { isFeatureEnabled } from '../utils/featureGating.js';
 
 class EscalationService {
   /**
    * Verificar si se debe crear una escalación
-   * Retorna true si se deben cumplir las condiciones
+   * GATED: salesAgent controla si el agente automático está activo
    */
-  shouldEscalate(userId) {
+  shouldEscalate(userId, req = null) {
+    // GATING: Verificar si salesAgent está habilitado
+    if (req && !isFeatureEnabled(req, 'salesAgent')) {
+      return false; // Sales agent deshabilitado
+    }
+
     const session = sessionManager.getSession(userId);
     const interactionCount = session.conversationHistory.length;
 
     console.log(`📊 Verificando escalación para ${userId}:`);
     console.log(`   - Interacciones: ${interactionCount}`);
     console.log(`   - Flujo actual: ${session.currentFlow}`);
+    console.log(`   - Sales agent activo: ${req ? isFeatureEnabled(req, 'salesAgent') : 'unknown'}`);
 
     // Condición 1: Más de 3 interacciones
     if (interactionCount <= 3) {

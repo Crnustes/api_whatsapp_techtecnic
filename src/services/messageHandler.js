@@ -5,20 +5,25 @@
  */
 
 import conversationManager from './conversationManager.js';
+import { logEvent } from '../utils/eventLogger.js';
 
 class MessageHandler {
-  async handleIncomingMessage(message, senderInfo) {
+  async handleIncomingMessage(message, senderInfo, ctx) {
     try {
-      console.log(`\n📨 Procesando mensaje de ${senderInfo?.wa_id}`);
-      console.log(`   Tipo: ${message.type}`);
+      logEvent('info', 'messageHandler.processing', ctx, {
+        messageType: message.type
+      });
       
       // Delegar al nuevo conversationManager
-      const result = await conversationManager.handleIncomingMessage(message, senderInfo);
+      const result = await conversationManager.handleIncomingMessage(message, senderInfo, ctx);
       
-      console.log(`   ✅ Mensaje procesado`);
+      logEvent('info', 'messageHandler.processed', ctx, {});
       return result;
     } catch (error) {
-      console.error(`   ❌ Error procesando mensaje:`, error.message);
+      logEvent('error', 'messageHandler.error', ctx, {
+        error: error.message,
+        stack: error.stack
+      });
       throw error;
     }
   }

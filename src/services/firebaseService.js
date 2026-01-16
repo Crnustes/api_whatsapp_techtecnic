@@ -5,6 +5,7 @@
  */
 
 import { getClientProfilesRef, getSessionsRef, getConversationsRef, getOpportunitiesRef } from '../config/firebase.js';
+import { logFirebaseOp, logWarn } from '../utils/logger.js';
 
 /**
  * ============================================
@@ -31,9 +32,12 @@ export const getClientProfile = async (phoneNumber) => {
 /**
  * Crear o actualizar perfil de cliente
  */
-export const saveClientProfile = async (phoneNumber, profileData) => {
+export const saveClientProfile = async (phoneNumber, profileData, traceId = null) => {
   const ref = getClientProfilesRef();
-  if (!ref) return false;
+  if (!ref) {
+    logFirebaseOp('saveClientProfile', false, traceId, { reason: 'ref_not_available' });
+    return false;
+  }
 
   try {
     const existingProfile = await getClientProfile(phoneNumber);
@@ -59,13 +63,15 @@ export const saveClientProfile = async (phoneNumber, profileData) => {
       notes: profileData.notes || existingProfile?.notes || '',
       
       // Metadata
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      traceId
     };
 
     await ref.child(phoneNumber).set(profile);
+    logFirebaseOp('saveClientProfile', true, traceId, { phoneNumber });
     return profile;
   } catch (error) {
-    console.error('Error guardando perfil cliente:', error);
+    logFirebaseOp('saveClientProfile', false, traceId, { phoneNumber, error: error.message });
     return false;
   }
 };
@@ -79,18 +85,23 @@ export const saveClientProfile = async (phoneNumber, profileData) => {
 /**
  * Guardar sesión activa
  */
-export const saveSession = async (userId, sessionData) => {
+export const saveSession = async (userId, sessionData, traceId = null) => {
   const ref = getSessionsRef();
-  if (!ref) return false;
+  if (!ref) {
+    logFirebaseOp('saveSession', false, traceId, { reason: 'ref_not_available' });
+    return false;
+  }
 
   try {
     await ref.child(userId).set({
       ...sessionData,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      traceId
     });
+    logFirebaseOp('saveSession', true, traceId, { userId });
     return true;
   } catch (error) {
-    console.error('Error guardando sesión:', error);
+    logFirebaseOp('saveSession', false, traceId, { userId, error: error.message });
     return false;
   }
 };
@@ -136,18 +147,33 @@ export const deleteSession = async (userId) => {
 /**
  * Guardar conversación completa
  */
-export const saveConversation = async (conversationData) => {
+export const saveConversation = async (conversationData, traceId = null) => {
   const ref = getConversationsRef();
-  if (!ref) return false;
+  if (!ref) {
+    logFirebaseOp('saveConversation', false, traceId, { reason: 'ref_not_available' });
+    return false;
+  }
 
   try {
     const newConversationRef = ref.push();
     await newConversationRef.set({
       ...conversationData,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      traceId
+    });
+    logFirebaseOp('saveConversation', true, traceId, {
+      phoneNumber: conversationData.phoneNumber,
+      role: conversationData.role
     });
     return newConversationRef.key;
   } catch (error) {
+    logFirebaseOp('saveConversation', false, traceId, {
+      phoneNumber: conversationData.phoneNumber,
+      error: error.message
+    });
+    return false;
+  }
+};
     console.error('Error guardando conversación:', error);
     return false;
   }

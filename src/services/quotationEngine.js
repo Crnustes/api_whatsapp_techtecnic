@@ -4,6 +4,8 @@
  * Genera 3 opciones de precio basadas en parámetros
  */
 
+import { isFeatureEnabled } from '../utils/featureGating.js';
+
 class QuotationEngine {
   constructor() {
     // Precios base por tipo de proyecto
@@ -152,8 +154,9 @@ class QuotationEngine {
 
   /**
    * Generar 3 opciones de cotización
+   * GATED: quotationAI controla si se usa análisis inteligente
    */
-  generateQuotations(params) {
+  generateQuotations(params, req = null) {
     const {
       projectType,
       complexity,
@@ -161,41 +164,48 @@ class QuotationEngine {
       analysis
     } = params;
 
-    // Obtener precio base
+    // Verificar si quotationAI está habilitado
+    const useAIAnalysis = req && isFeatureEnabled(req, 'quotationAI');
+    
+    // Obtener precio base (sin IA si está deshabilitado)
     const basePrice = this.basePrices[projectType]?.[complexity.toLowerCase()] || 5000;
 
-    // Aplicar multiplicador de timeline
-    const timelineMultiplier = this.timelineMultipliers[timeline] || 1.0;
+    // Aplicar multiplicador de timeline (solo si AI está habilitado)
+    const timelineMultiplier = useAIAnalysis ? (this.timelineMultipliers[timeline] || 1.0) : 1.0;
     const adjustedPrice = basePrice * timelineMultiplier;
 
     // Generar 3 opciones
     const basic = {
       price: Math.round(adjustedPrice * 0.7),
       features: this.getFeatures(projectType, complexity, 'basic'),
-      timeline: this.calculateTimeline(complexity, 'high'), // Más tiempo = menos caro
-      description: 'Cumple lo esencial'
+      timeline: this.calculateTimeline(complexity, 'high'),
+      description: 'Cumple lo esencial',
+      aiAnalyzed: useAIAnalysis
     };
 
     const recommended = {
       price: Math.round(adjustedPrice),
       features: this.getFeatures(projectType, complexity, 'recommended'),
       timeline: this.calculateTimeline(complexity, 'normal'),
-      description: 'Lo que recomendamos'
+      description: 'Lo que recomendamos',
+      aiAnalyzed: useAIAnalysis
     };
 
     const premium = {
       price: Math.round(adjustedPrice * 1.5),
       features: this.getFeatures(projectType, complexity, 'premium'),
       timeline: this.calculateTimeline(complexity, 'fast'),
-      description: 'Máximas características'
+      description: 'Máximas características',
+      aiAnalyzed: useAIAnalysis
     };
 
     return {
       basic,
       recommended,
       premium,
-      analysis: analysis,
-      generated_at: new Date().toISOString()
+      analysis: useAIAnalysis ? analysis : null,
+      generated_at: new Date().toISOString(),
+      aiEnabled: useAIAnalysis
     };
   }
 
