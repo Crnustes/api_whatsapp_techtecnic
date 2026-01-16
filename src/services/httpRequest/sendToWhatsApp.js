@@ -15,7 +15,10 @@ const sendToWhatsApp = async (data) => {
         });
         return response.data;
     } catch (error) {
-        console.error('Error sending to WhatsApp:', error);
+        // Log compacto para evitar spam y facilitar debug
+        const status = error?.response?.status;
+        const detail = error?.response?.data || error.message;
+        console.error('WhatsApp API error', { status, detail });
         throw error;
     }
 };

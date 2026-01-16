@@ -16,7 +16,17 @@ class WhatsAppService {
       status: 'read',
       message_id: messageId,
     };
-    await sendToWhatsApp(data);
+    try {
+      await sendToWhatsApp(data);
+    } catch (error) {
+      // Si es 401/403 por token inválido, no romper el flujo principal
+      const status = error?.response?.status;
+      if (status === 401 || status === 403) {
+        console.warn('markAsRead skipped (auth issue). Revisa API_TOKEN / permisos de WhatsApp.');
+        return;
+      }
+      throw error;
+    }
   }
 
   async sendInteractiveButtons(to, bodyText, buttons) {
